@@ -31,14 +31,11 @@ def decum(df,FREQ):
     dates = []
     for i in range(0, len(df)):
         dates.append(df.index[i])
-        match FREQ: 
-            case "M":
-                if df.index[i].month == 1:
-                    #de_cum.append(df.iloc[i].Value)
-                    de_cum.append(df[i])                  
-                else:
-                    #de_cum.append(df.iloc[i].Value-df.iloc[i-1].Value)  
-                    de_cum.append(df[i]-df[i-1])  
+        if FREQ == "M":
+            if df.index[i].month == 1:
+                de_cum.append(df[i])                  
+            else:                
+                de_cum.append(df[i]-df[i-1])  
     
     df = pd.DataFrame({'Date':dates, 'Value':de_cum})
     df = pd.DataFrame(df).set_index('Date')
@@ -98,68 +95,60 @@ df = df[(df.index >= Start_date.strftime('%Y-%m-%d')) & (df.index <= End_date.st
 #st.write(df)
 
 if freq=="M":
-    match method:
-        case "EOP":
-            df = df.resample(freq).last()
-        case "AVG":
-            df = df.resample(freq).mean()
-        case "SUM":
-            df = df.resample(freq).sum()
-        case "DECUM":
-            df = decum(df,freq)
+    if method=="EOP":
+        df = df.resample(freq).last()
+    elif method=="AVG":
+        df = df.resample(freq).mean()
+    elif method=="SUM":
+        df = df.resample(freq).sum()
+    elif method=="DECUM":
+        df = decum(df,freq)
 elif freq=="Q":
-    match method:
-        case "EOP":
-            df = df.resample('Q').last()
-        case "AVG":
-            df = df.resample('Q').mean()
-        case "SUM":
-            df = df.resample('Q').sum()
+    if method=="EOP":
+        df = df.resample('Q').last()
+    elif method=="AVG":
+        df = df.resample('Q').mean()
+    elif method=="SUM":
+        df = df.resample('Q').sum()
 elif freq=="Y":
-    match method:
-        case "EOP":
-            df = df.resample('Y').last()
-        case "AVG":
-            df = df.resample('Y').mean()
-        case "SUM":
-            df = df.resample('Y').sum()           
-match freq:
-    case "D":
-        match trans:
-            case "mom":
-                df = df.pct_change(periods=20) * 100
-            case "qoq":
-                df = df.pct_change(periods=3*20) * 100
-            case "yoy":
-                df = df.pct_change(periods=252) * 100 
-    case "M":
-        match trans:
-            case "mom":
-                df = df.pct_change(periods=1) * 100
-            case "qoq":
-                df = df.pct_change(periods=4) * 100
-            case "yoy":
-                df = df.pct_change(periods=12) * 100        
-    case "Q":
-        match trans:            
-            case "qoq":
-                df = df.pct_change(periods=1) * 100
-            case "yoy":
-                df = df.pct_change(periods=4) * 100        
-    case "Y":
-        match trans:                        
-            case "yoy":
-                df = df.pct_change(periods=1) * 100        
+    if method=="EOP":
+        df = df.resample('Y').last()
+    elif method=="AVG":
+        df = df.resample('Y').mean()
+    elif method=="SUM":
+        df = df.resample('Y').sum()           
+
+if freq=="D":
+    if trans=="mom":
+        df.pct_change(periods=20) * 100
+    elif trans=="qoq":
+        df = df.pct_change(periods=3*20) * 100
+    elif trans=="yoy":
+        df = df.pct_change(periods=252) * 100 
+elif freq=="M":
+    if trans=="mom":
+        df = df.pct_change(periods=1) * 100
+    elif trans=="qoq":
+        df = df.pct_change(periods=4) * 100
+    elif trans=="yoy":
+        df = df.pct_change(periods=12) * 100        
+elif freq=="Q":
+    if trans=="qoq":
+        df = df.pct_change(periods=1) * 100
+    elif trans=="yoy":
+        df = df.pct_change(periods=4) * 100        
+elif freq=="Y":
+    if trans=="yoy":
+        df = df.pct_change(periods=1) * 100        
             
-match func:
-    case "avg":
-        df = df.rolling(window=int(window_num)).mean()
-    case "sum":
-         df = df.rolling(int(window_num)).sum()
-    case "std":
-        df = df.rolling(int(window_num)).std().shift()
-    case "cmlt":
-        df = (1 + df/100).cumprod() - 1
+if func=="avg":
+    df = df.rolling(window=int(window_num)).mean()
+elif func=="sum":
+    df = df.rolling(int(window_num)).sum()
+elif func=="std":
+    df = df.rolling(int(window_num)).std().shift()
+elif func=="cmlt":
+    df = (1 + df/100).cumprod() - 1
 
                 
 fig, ax = plt.subplots()
