@@ -193,3 +193,53 @@ download2 = st.download_button(
     file_name=ticker+".xlsx",
     mime='application/vnd.ms-excel'
 )
+
+query = "SELECT * FROM sovdb_schema.countries"
+cur = conn.cursor()
+cur.execute(query);
+rows = cur.fetchall()
+colnames = [desc[0] for desc in cur.description]
+df = pd.DataFrame(rows,columns=colnames)
+count_sel = df.name
+
+#query2 = "SELECT * FROM sovdb_schema.macro_indicators";
+#st.write(query2)
+#cur = conn.cursor()
+#cur.execute(query2);
+#rows = cur.fetchall()
+#colnames = [desc[0] for desc in cur.description]
+#df = pd.DataFrame(rows,columns=colnames)
+#groups = df.group.unique()
+
+#budget - DROP
+groups = ['real','external','fiscal','popul','markets','eco','covid','finance','institute','budget','all']
+
+tot_str = "("
+for i in range(0,len(groups)-1):
+    tot_str = tot_str+"'"+groups[i]+"', "
+tot_str = tot_str[:-2]
+tot_str = tot_str+")"
+
+cols=st.columns(2)
+with cols[0]:
+    countr = st.selectbox("Country",(count_sel), index=203)
+with cols[1]:    
+    mgroup = st.selectbox("Group",(groups), index=0) 
+
+
+#query2 = "SELECT * FROM sovdb_schema.macro_indicators WHERE country = '"+countr+"' AND group = public"
+#query2 = "SELECT * FROM sovdb_schema.""macro_indicators"" WHERE ""country"" = '"+countr+"' AND group = '"+groupm+"'"
+if mgroup == 'all':
+    query2 = "SELECT * FROM sovdb_schema.""macro_indicators"" WHERE ""country"" = '"+countr+"' AND ""mgroup"" IN "+tot_str
+    #query2 = "SELECT * FROM sovdb_schema.""macro_indicators"" WHERE ""country"" = '"+countr+"' AND ""mgroup"" IN ('real','external')"
+else:
+    query2 = "SELECT * FROM sovdb_schema.""macro_indicators"" WHERE ""country"" = '"+countr+"' AND ""mgroup"" = '"+mgroup+"'"
+
+#st.write(query2)
+#st.write(len(groupm))
+cur = conn.cursor()
+cur.execute(query2);
+rows = cur.fetchall()
+colnames = [desc[0] for desc in cur.description]
+df = pd.DataFrame(rows,columns=colnames)
+st.table(df[['ticker', 'full_name','freq','metric','mgroup']])
