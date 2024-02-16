@@ -2,7 +2,7 @@ import streamlit as st
 import matplotlib 
 import matplotlib.pyplot as plt
 import pandas as pd
-#import numpy as np
+#import numpy as np 
 import psycopg2 as ps
 import datetime
 from datetime import date
