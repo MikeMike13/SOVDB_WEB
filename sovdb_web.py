@@ -75,6 +75,9 @@ with cols[5]:
 with cols[6]:    
     y_level = st.number_input('level')    
 
+
+    
+    
 #BOND_SU26219RMFS4_MOEX_TQOB
 #STOCK_AFLT_MOEX_TQBR
 
@@ -150,7 +153,41 @@ elif func=="std":
 elif func=="cmlt":
     df = (1 + df/100).cumprod() - 1
 
-                
+
+#period change
+cols=st.columns(4)
+Start_val = 0
+End_val = 0;
+period_calc=''
+with cols[0]:    
+    bool_c = st.checkbox('Calculate returns')
+with cols[1]:
+    Start_date_c = st.date_input("From: ", datetime.date(2022, 1, 1))
+    if bool_c:
+        try:            
+            Start_val = round(df.loc[pd.DatetimeIndex([Start_date_c])].values[0],2)       
+            st.write(Start_val)
+            period_calc = Start_val
+        except:
+            a=1  
+with cols[2]:    
+    End_date_c = st.date_input("To: ", date.today())
+    if bool_c:
+        try:            
+            End_val = round(df.loc[pd.DatetimeIndex([End_date_c])].values[0],2)       
+            st.write(End_val)
+            period_calc = period_calc+" "+End_val
+        except:
+            a=1    
+with cols[3]: 
+    if bool_c and Start_val*End_val:
+        period_ret = (End_val/Start_val-1)*100
+        annula_ret = ((1+period_ret/100)**(365.25/(End_date_c - Start_date_c).days)-1)*100
+        years = (End_date_c - Start_date_c).days/365.25
+        
+        st.write("abs: "+str(round(End_val-Start_val,2))+"; pct: "+str(round(period_ret,2))+"%") 
+        st.write("ann ret: "+str(round(annula_ret,2))+"% ("+str(round(years,1))+"Y)")    
+    
 fig, ax = plt.subplots()
 Lastdate = df.index[-1].strftime('%Y-%m-%d')
 #st.write(colnames)
@@ -160,7 +197,12 @@ ax.text(df.index[-1], df[-1], round(df[-1],2), fontsize=8,color=mymap[0]);
 
 if bool_y:
     ax.axhline(y=y_level, color=(0.15, 0.15, 0.15), linestyle='-',linewidth=0.75)
-
+#if bool_c and period_calc != 'no start value' and period_calc != 'no end value':
+if bool_c and Start_val*End_val:    
+    ax.plot(Start_date_c, Start_val, marker=5,color=(1,0,0)) 
+    ax.plot(End_date_c, End_val, marker=4,color=(1,0,0)) 
+    
+    
 plt.title(ticker+", "+Lastdate) 
 plt.legend() 
 
