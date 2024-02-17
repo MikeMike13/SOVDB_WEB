@@ -213,16 +213,42 @@ plt.show()
 
 st.pyplot(fig)
 
-
-buffer = io.BytesIO()
-with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:    
-    df.to_excel(writer, sheet_name='Sheet1', index=True)    
-download2 = st.download_button(
-    label="Excel",
-    data=buffer,
-    file_name=ticker+".xlsx",
-    mime='application/vnd.ms-excel'
-)
+cols=st.columns(3)
+with cols[0]:    
+    buffer = io.BytesIO()
+    with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:    
+        df.to_excel(writer, sheet_name='Sheet1', index=True)    
+    download2 = st.download_button(
+        label="Excel",
+        data=buffer,
+        file_name=ticker+".xlsx",
+        mime='application/vnd.ms-excel'
+    )
+with cols[1]:    
+  #  @st.cache
+    def convert_df(df):
+        # IMPORTANT: Cache the conversion to prevent computation on every rerun
+        return df.to_csv().encode('utf-8')
+    
+    csv = convert_df(df)
+    
+    st.download_button(
+        label="CSV",
+        data=csv,
+        file_name=ticker+".csv",
+        mime='text/csv',
+    )
+with cols[2]:
+    fn = ticker+".png"
+    plt.savefig(fn)
+    with open(fn, "rb") as img:
+        btn = st.download_button(
+            label="JPG",
+            data=img,
+            file_name=fn,
+            mime="image/png"
+        )
+   
 
 query = "SELECT * FROM sovdb_schema.countries"
 cur = conn.cursor()
