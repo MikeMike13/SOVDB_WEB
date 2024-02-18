@@ -45,6 +45,13 @@ def decum(df,FREQ):
 
 mymap = ['#0051CA', '#F8AC27', '#3F863F', '#C6DBA1', '#FDD65F', '#FBEEBD', '#50766E'];
 
+st.set_page_config(
+    page_title="Main",
+    page_icon="👋",
+)
+
+st.sidebar.success("Select a demo above.")
+
 st.write("Available data: [link](https://docs.google.com/spreadsheets/d/15xyVYbzi04rBfxX4c9wfemcV-BD0pjvb6oCO-2KPGnM/edit#gid=0)")
 
 cols=st.columns(2)
