@@ -349,8 +349,4 @@ st.dataframe(
     height=1550,
 )
 
-#st.write("width=800, not use_container_width")
-
-
-#with cols[0]:
-#    st.write(ticker_sel.T, width=300, height=900)
+st.title('Upload data') 
