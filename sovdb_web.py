@@ -5,6 +5,7 @@ import pandas as pd
 import psycopg2 as ps
 import datetime
 from datetime import date
+#from datetime import datetime
 from io import BytesIO
 import io
 
@@ -195,6 +196,55 @@ with cols[3]:
         st.write("abs: "+str(round(End_val-Start_val,2))+"; pct: "+str(round(period_ret,2))+"%") 
         st.write("ann ret: "+str(round(annula_ret,2))+"% ("+str(round(years,1))+"Y)")    
     
+    
+def click_button_update_add(UPDATE, Update_date,Update_number):
+    if (UPDATE):      
+        #st.write(Update_number)
+        query = "UPDATE sovdb_schema.\""+ticker+"\" SET \"""Value\""" = '"+str(Update_number)+"' WHERE \"""Date\""" = '"+Update_date.strftime('%d-%b-%Y')+"'"        
+        cur.execute(query)
+        conn.commit()
+        st.warning("UPDATES: "+ticker+": "+Update_date.strftime('%d-%b-%Y')+" FROM  "+str(Update_number)+" TO ->")
+    else:
+        #addquery = "INSERT INTO sovdb_schema."""+ticker(i)+""" (""Date"", ""Value"") VALUES ('"+date+"'::date, "+Value+"::double precision) returning ""Date"";";
+        query = "INSERT INTO sovdb_schema.\""+ticker+"\" (\"""Date\""", \"""Value\""") VALUES ('"+Update_date.strftime('%d-%b-%Y')+"'::date, '"+str(Update_number)+"':: double precision) returning \"""Date\""""
+        cur.execute(query)
+        conn.commit()
+        st.warning("ADDED: "+ticker+": "+Update_date.strftime('%d-%b-%Y')+" - "+str(Update_number))
+    
+    
+    st.session_state.clicked = True
+
+def click_button_del(DELETE, Delete_date):
+    deletequery = "DELETE FROM sovdb_schema.\""+ticker+"\" WHERE \"""Date\""" = '"+Delete_date.strftime('%d-%b-%Y')+"'"        
+#    deletequery = "DELETE FROM users WHERE id=5;";
+    cur.execute(deletequery)
+    conn.commit()
+
+    #st.warning("DELETED"+ticker+": "+Delete_date.strftime('%d-%b-%Y')+" - "+str(Update_number))
+    st.warning("DELETED: "+ticker+": "+Delete_date.strftime('%d-%b-%Y'))
+    st.session_state.clicked = True
+
+### - 22 - 92.4387     21 '92.349
+#Edit data
+cols=st.columns(4)
+with cols[0]:
+    Update_date = st.date_input("Edit date: ", date.today())
+    if Update_date.strftime('%Y-%m-%d') in df.index.strftime('%Y-%m-%d').values: 
+        Update_val = df.loc[Update_date.strftime('%Y-%m-%d')]
+        UPDATE = 1
+        #st.write(df)
+    else:
+        Update_val = 0 
+        UPDATE = 0
+with cols[1]:    
+   Update_number = st.number_input('Value (0 if not exists)',value=Update_val)
+with cols[2]:
+    
+    st.button('Update/Add', on_click=click_button_update_add, args=(UPDATE, Update_date,Update_number))   
+with cols[3]:
+    DELETE = 1
+    st.button('Delete', on_click=click_button_del, args=(DELETE, Update_date))   
+       
 fig, ax = plt.subplots()
 Lastdate = df.index[-1].strftime('%Y-%m-%d')
 #st.write(colnames)
@@ -282,7 +332,7 @@ for i in range(0,len(groups)-1):
     tot_str = tot_str+"'"+groups[i]+"', "
 tot_str = tot_str[:-2]
 tot_str = tot_str+")"
-
+    
 cols=st.columns(2)
 with cols[0]:
     countr = st.selectbox("Country",(count_sel), index=203)
