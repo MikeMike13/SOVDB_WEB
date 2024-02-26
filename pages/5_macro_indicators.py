@@ -3,7 +3,7 @@ import psycopg2 as ps
 import pandas as pd
 #import math
 from datetime import date
-import openpyxl
+#import openpyxl
 import matplotlib 
 import matplotlib.pyplot as plt
 import numpy as np
