@@ -3,6 +3,10 @@ import psycopg2 as ps
 import pandas as pd
 #import math
 from datetime import date
+import openpyxl
+import matplotlib 
+import matplotlib.pyplot as plt
+import numpy as np
 
 conn = ps.connect(database = "sovdb", 
                         user = "mike", 
@@ -19,6 +23,7 @@ colnames = [desc[0] for desc in cur.description]
 df = pd.DataFrame(rows,columns=colnames)
 count_sel = df.name
 
+mymap = ['#0051CA', '#F8AC27', '#3F863F', '#C6DBA1', '#FDD65F', '#FBEEBD', '#50766E'];
 
 st.title('New indicator')
 if "ticker_def" not in st.session_state:
@@ -350,3 +355,130 @@ st.dataframe(
 )
 
 st.title('Upload data') 
+
+cols=st.columns(4)
+with cols[0]:
+    list_xls = st.text_input("list: ",'EXPIMP_M')
+with cols[1]:
+    ind_col = st.number_input("Tickers col: ",value=2)
+with cols[2]:
+    start_col = st.number_input("Column from: ",value=16)
+with cols[3]:
+    end_col = st.number_input("Column to: ",value=208)
+
+    
+uploaded_file = st.file_uploader("Choose a file", type = 'xlsx')
+if uploaded_file is not None:
+    df_raw = pd.read_excel(uploaded_file, sheet_name=list_xls, decimal ='.',)
+    
+    get_ind = df_raw.iloc[:,ind_col].dropna().index
+    
+    df_raw_sel = df_raw.iloc[get_ind,start_col-1:end_col]    
+    colnames = df_raw.iloc[get_ind,ind_col-1]
+    df_new = pd.DataFrame(df_raw_sel.values.T,columns=colnames)
+    df_new = pd.DataFrame(df_new).set_index('Date')
+    df_new.index = pd.to_datetime(df_new.index)
+    
+    data_old = []  
+     
+    no_data = 0
+    j=0
+    for indics in colnames[1:]:
+        #st.write(indics)
+        
+        query = "SELECT * FROM sovdb_schema.\""+indics+"\"  ORDER BY \"""Date\""" ASC"
+        #cur = conn.cursor()
+        cur.execute(query);
+        rows = cur.fetchall()
+        rows = np.array([*rows])
+        index_old = []
+        if rows.size==0:
+            #st.write(rows)
+            no_data = 1
+            #st.write('no data')
+        else:
+            #colnames = [desc[0] for desc in cur.description]
+            #df = pd.DataFrame(rows,columns=colnames)
+            #df = pd.DataFrame(df).set_index('Date')
+            #df = df.sort_index()        
+            #df.index = pd.to_datetime(df.index)                
+            #st.write(rows[:,1])
+            data_old.insert(j, rows[:,1].tolist())
+            j=j+1
+            index_old = pd.to_datetime(rows[:,0].tolist())
+            #rows[:,1]
+        
+    if no_data:
+        df_comb = df_new
+        df_old = pd.DataFrame([],columns=colnames)
+        st.write('indicators are downloaded for the first time')
+    else:
+        #st.write(data_old)        
+        #st.write(colnames)
+        df_old = pd.DataFrame(np.array(data_old).T.tolist(),columns=colnames[1:],index=index_old)
+        df_old = df_old.sort_index() 
+        df_comb = pd.concat([df_old, df_new], ignore_index=False, sort=True)
+        df_comb = df_comb[df_comb.index>=df_new.index[0]]
+        df_comb = df_comb.sort_index() 
+    
+    cols=st.columns(3)
+    with cols[0]:
+       st.write('Is in the database')
+       st.write(df_old)
+    with cols[1]:
+       st.write('New data') 
+       st.write(df_new)
+    with cols[2]:
+       st.write('Combined data to download') 
+       st.write(df_comb)
+    
+    new_indics_plot = st.selectbox('Select indicator to plot', (colnames[1:]), index=0)
+    
+    fig, ax = plt.subplots()    
+    ax.plot(df_old[new_indics_plot], color=mymap[0], linestyle = '--', label='in database',linewidth=0.8) 
+    ax.plot(df_new[new_indics_plot], color=mymap[0], label='new data',linewidth=0.8) 
+    ax.plot(df_comb[new_indics_plot], color=mymap[1], linestyle = ':', label='combined',linewidth=0.8) 
+    
+        
+    plt.legend() 
+    formatter = matplotlib.dates.DateFormatter('%Y')
+    ax.xaxis.set_major_formatter(formatter)
+    plt.show() 
+    st.pyplot(fig)
+    
+    INS=1    
+    def write_indicator_to_sovdb(INS, df_comb2):
+        for indic in df_comb2.columns:
+            #st.write(indic)
+            #st.write(df_comb2[indic].size)
+            #st.write(df_comb2[indic][0], df_comb2.index[0])
+            
+            #delete all data from indicator table
+            for dates_del in df_comb2.index:
+                delete_q = "DELETE FROM sovdb_schema.\""+indic+"\" WHERE \"""Date\"""= '"+dates_del.strftime('%d-%b-%Y')+"'"
+                cur.execute(delete_q)
+                conn.commit()                              
+                        
+            for value in range(df_comb2[indic].size):
+                query = "INSERT INTO sovdb_schema.\""+indic+"\" (\"""Date\""", \"""Value\""") VALUES ('"+df_comb2.index[value].strftime('%d-%b-%Y')+"'::date, '"+str(df_comb2[indic][value])+"':: double precision) returning \"""Date\""""
+                cur.execute(query)
+                conn.commit()
+                #st.write(df_comb2[indic][value-1], df_comb2.index[value-1])
+                 
+            #update dates in des            
+            TD = date.today()
+            if no_data:
+                query = "UPDATE sovdb_schema.""macro_indicators"" SET \"""start_date\""" = '"+str(df_comb2.index[0].strftime('%d-%b-%Y'))+"', \"""end_date\""" = '"+str(df_comb2.index[-1].strftime('%d-%b-%Y'))+"', \"""update_date\""" = '"+str(TD.strftime('%d-%b-%Y'))+"',\"""first_down_date\""" = '"+str(TD.strftime('%d-%b-%Y'))+"' WHERE \"""ticker\""" = '"+indic+"'"        
+                st.warning(indic+" DATA IS ADDED")
+            else:
+                query = "UPDATE sovdb_schema.""macro_indicators"" SET \"""start_date\""" = '"+str(df_comb2.index[0].strftime('%d-%b-%Y'))+"', \"""end_date\""" = '"+str(df_comb2.index[-1].strftime('%d-%b-%Y'))+"', \"""update_date\""" = '"+str(TD.strftime('%d-%b-%Y'))+"' WHERE \"""ticker\""" = '"+indic+"'"        
+                st.warning(indic+" DATA IS UPDATED")
+            cur.execute(query)
+            conn.commit()
+        
+    
+
+    st.button('Add new data to sovdb', on_click=write_indicator_to_sovdb, args=(INS, df_comb))
+    
+    
+    

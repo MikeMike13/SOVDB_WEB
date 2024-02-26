@@ -81,11 +81,11 @@ ret_YTD_pct = (df_plot[-1]/df_y[-2]-1)*100
 
 cols=st.columns(3)
 with cols[0]:
-    st.write("1W return: "+str(round(ret_1W_pct,1))+"%, "+str(round(ret_1W_abs,1))+" RUB")
+    st.write("1W: "+str(round(ret_1W_pct,1))+"%, "+str(round(ret_1W_abs,1))+" RUB")
 with cols[1]:
-    st.write("MTD return: "+str(round(ret_MTD_pct,1))+"%, "+str(round(ret_MTD_abs,1))+" RUB")
+    st.write("MTD: "+str(round(ret_MTD_pct,1))+"%, "+str(round(ret_MTD_abs,1))+" RUB")
 with cols[2]:
-    st.write("YTD return: "+str(round(ret_YTD_pct,1))+"%, "+str(round(ret_YTD_abs,1))+" RUB")
+    st.write("YTD: "+str(round(ret_YTD_pct,1))+"%, "+str(round(ret_YTD_abs,1))+" RUB")
 #cols=st.columns(4)
 #with cols[0]:
 #    name = st.write(df_des.rus_long.values[0])

@@ -8,6 +8,7 @@ from datetime import date
 #from datetime import datetime
 from io import BytesIO
 import io
+import numpy as np
 
 conn = ps.connect(database = "sovdb", 
                         user = "mike", 
@@ -203,6 +204,24 @@ def click_button_update_add(UPDATE, Update_date,Update_number):
         query = "UPDATE sovdb_schema.\""+ticker+"\" SET \"""Value\""" = '"+str(Update_number)+"' WHERE \"""Date\""" = '"+Update_date.strftime('%d-%b-%Y')+"'"        
         cur.execute(query)
         conn.commit()
+        
+        #update dates
+        query = "SELECT * FROM sovdb_schema.""macro_indicators"" WHERE \"""ticker\""" = '"+ticker+"'"    
+        #cur = conn.cursor()
+        cur.execute(query);
+        rows = cur.fetchall()
+        rows = np.array([*rows])        
+        macro =1 
+        if rows.size==0:            
+            macro = 0
+        else:
+            macro = 1
+        
+        if macro:
+            query = "UPDATE sovdb_schema.""macro_indicators"" SET \"""end_date\""" = '"+str(Update_date.strftime('%d-%b-%Y'))+"', \"""update_date\""" = '"+str(date.today().strftime('%d-%b-%Y'))+"' WHERE \"""ticker\""" = '"+ticker+"'"        
+            cur.execute(query)
+            conn.commit()
+        
         st.warning("UPDATES: "+ticker+": "+Update_date.strftime('%d-%b-%Y')+" FROM  "+str(Update_number)+" TO ->")
     else:
         #addquery = "INSERT INTO sovdb_schema."""+ticker(i)+""" (""Date"", ""Value"") VALUES ('"+date+"'::date, "+Value+"::double precision) returning ""Date"";";
