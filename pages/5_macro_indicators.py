@@ -25,7 +25,7 @@ count_sel = df.name
 
 mymap = ['#0051CA', '#F8AC27', '#3F863F', '#C6DBA1', '#FDD65F', '#FBEEBD', '#50766E'];
 
-st.title('New indicator')
+st.title('1. New indicator')
 if "ticker_def" not in st.session_state:
     st.session_state.ticker_def = ''
 if "alive_def" not in st.session_state:
@@ -328,33 +328,45 @@ with cols[3]:
     st.button('Delete indicator', on_click=delete_button)
     st.write(ticker_n)
     
-st.title('Edit indicator') 
+st.title('2. Edit indicator') 
                         
-st.title('Show indicator des') 
-ticker_show = st.text_input('ticker','')
-query = "SELECT * FROM sovdb_schema.""macro_indicators"" WHERE ""ticker"" = '"+ticker_show+"'"    
-cur = conn.cursor()
-cur.execute(query);
-rows = cur.fetchall()
-colnames = [desc[0] for desc in cur.description]
-ticker_sel = pd.DataFrame(rows,columns=colnames)
+st.title('3. Show indicator') 
+ticker_show = st.text_input('ticker','RU_EXPG_M_CBR')
+cols=st.columns(2)
+with cols[0]:
+    st.write('Description')
+    query = "SELECT * FROM sovdb_schema.""macro_indicators"" WHERE ""ticker"" = '"+ticker_show+"'"    
+    cur = conn.cursor()
+    cur.execute(query);
+    rows = cur.fetchall()
+    colnames = [desc[0] for desc in cur.description]
+    ticker_sel = pd.DataFrame(rows,columns=colnames)
+    
+    
+    #cols=st.columns(1)
+    
+    st.dataframe(
+        ticker_sel.T,
+        hide_index=False,
+        column_config={
+            #"col0": None,
+            #"col0": st.column_config.TextColumn(label="field"),
+            "col0": st.column_config.TextColumn(label="Value", width="large"),        
+        },
+        width=1200,
+        height=1550,
+    )
+with cols[1]:
+    st.write('Data')
+    query = "SELECT * FROM sovdb_schema.\""+ticker_show+"\"" 
+    cur.execute(query)
+    rows_sh = cur.fetchall() 
+    colnames = [desc[0] for desc in cur.description]
+    df_sh = pd.DataFrame(rows_sh,columns=colnames)
+    st.write(df_sh)
 
 
-#cols=st.columns(1)
-
-st.dataframe(
-    ticker_sel.T,
-    hide_index=False,
-    column_config={
-        #"col0": None,
-        #"col0": st.column_config.TextColumn(label="field"),
-        "col0": st.column_config.TextColumn(label="Value", width="large"),        
-    },
-    width=1200,
-    height=1550,
-)
-
-st.title('Upload data') 
+st.title('4. Upload data') 
 
 cols=st.columns(4)
 with cols[0]:
@@ -479,6 +491,5 @@ if uploaded_file is not None:
     
 
     st.button('Add new data to sovdb', on_click=write_indicator_to_sovdb, args=(INS, df_comb))
-    
     
     
