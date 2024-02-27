@@ -85,11 +85,23 @@ for key in m_keys:
             #rows = np.array([*rows])
             #st.write(key)
             #st.write(df_x_d[(df_x_d.index == date.strftime('%Y-%m-%d')) ])
-            data_x.append(df_x_d[(df_x_d.index == date.strftime('%Y-%m-%d')) ].values)
-            data_y.append(df_y_d[(df_y_d.index == date.strftime('%Y-%m-%d')) ].values)
+            x_down = df_x_d[(df_x_d.index == date.strftime('%Y-%m-%d'))]
+            y_down = df_y_d[(df_y_d.index == date.strftime('%Y-%m-%d'))]
+            #st.write(type(x_down))
+            if x_down.size == 0:
+                data_x.append(0)
+            else:
+                data_x.append(x_down.values[0][0])
+                
+            if y_down.size == 0:
+                data_y.append(0)
+            else:
+                data_y.append(y_down.values[0][0])
             labels.append(key)
     
-#st.write(labels)    
+#st.write(data_x)    
+#st.write(data_y)    
+#st.write(labels) 
 
 fig, ax = plt.subplots()
 #Lastdate = df.index[-1].strftime('%Y-%m-%d')
