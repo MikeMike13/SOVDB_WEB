@@ -76,7 +76,7 @@ for key in m_keys:
         df_y_d.index = pd.to_datetime(df_y_d.index)     
         
         
-        if df_x_d.index[-1].date() > date and df_y_d.index[-1].date() > date:
+        if df_x_d.index[-1].date() >= date and df_y_d.index[-1].date() >= date:
             #st.write(df_x.index[-1].values)
             
             #query = "SELECT * FROM sovdb_schema.\""+ticker_x+"\"  WHERE \"""Date\""" ='"+date.strftime('%d-%b-%Y')+"'"    
