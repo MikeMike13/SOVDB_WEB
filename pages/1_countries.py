@@ -26,7 +26,7 @@ count_sel = df.name
 df = df.fillna('') 
 
 countr = st.selectbox("Country",(count_sel), index=203)
-#st.write(df)
+
 #st.write(df[df.name==countr].type.values[0])
 key = df[df.name==countr].m_key.values[0]
 
