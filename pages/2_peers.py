@@ -177,8 +177,7 @@ elif plot_type=="2. Scatter: 1 indicator 2 dates":
     suffix_y = ""
     for key in m_keys:
         ticker_x = key+"_"+ticker_x0
-        #st.write(ticker_x)
-        #ticker_y = key+"_"+ticker_y0
+        
         #check if exists
         query = "SELECT * FROM sovdb_schema.""macro_indicators"" WHERE ""ticker"" = '"+ticker_x+"'"    
        # cur = conn.cursor()
