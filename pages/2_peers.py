@@ -3,7 +3,8 @@ import pandas as pd
 import psycopg2 as ps
 import numpy as np
 import matplotlib.pyplot as plt
-#import math 
+from io import BytesIO
+import io
 
 mymap = ['#0051CA', '#F8AC27', '#3F863F', '#C6DBA1', '#FDD65F', '#FBEEBD', '#50766E'];
     
@@ -12,6 +13,8 @@ conn = ps.connect(database = "sovdb",
                         host= '185.26.120.148',
                         password = "mikesovdb13",
                         port = 5432)
+
+df_f = pd.DataFrame({'A' : []})
 
 #get all countries m_key
 query = "SELECT * FROM sovdb_schema.countries"
@@ -23,6 +26,17 @@ df = pd.DataFrame(rows,columns=colnames)
 m_keys = df.m_key
 #st.write(df)
 countries = df.name
+
+#get all peers
+query = "SELECT * FROM sovdb_schema.peers"
+cur = conn.cursor()
+cur.execute(query);
+rows = cur.fetchall()
+colnames = [desc[0] for desc in cur.description]
+df = pd.DataFrame(rows,columns=colnames)
+peers = df.p_key
+#st.write(df.p_key)
+#countries = df.name
 #st.write(m_keys)
 
 cols=st.columns(4)
@@ -39,7 +53,7 @@ cols=st.columns(2)
 with cols[0]:
     country_sel = st.selectbox("Country",countries, index=203)
 with cols[1]:
-    peers = st.selectbox("Peers",("Peers1","Peers2"), index=0)
+    peers = st.selectbox("Peers",peers, index=0)
 
     
 cols=st.columns(5)
@@ -55,10 +69,10 @@ with cols[4]:
     show_all = st.checkbox('show all',1) 
     
 plot_type = st.selectbox("Choose plot type",("","1. Scatter: 2 indicators 1 date (end)",\
-                                             "2. Scatter: 1 indicator 2 dates",\
-                                             "3. Plot: 1 indicator between 2 dates",\
-                                             "4. Bar: 2 indicators 1 date",\
-                                             "5. Bar stacked: 1 indicator between 2 dates"), index=0)   
+                                             "2. Scatter: 1 indicator (x) 2 dates",\
+                                             "3. Plot: 1 indicator (x) between 2 dates",\
+                                             "4. Bar: 2 indicators 1 date (end)",\
+                                             "5. Bar stacked: 1 indicator (x) between 2 dates"), index=0)   
 
 
 if plot_type=="1. Scatter: 2 indicators 1 date (end)":
@@ -139,6 +153,8 @@ if plot_type=="1. Scatter: 2 indicators 1 date (end)":
     fig, ax = plt.subplots()
     #Lastdate = df.index[-1].strftime('%Y-%m-%d')
     #st.write(colnames)
+    
+       
     if log_x:
         data_x = np.log(data_x)
         suffix_x = ", log"
@@ -146,13 +162,18 @@ if plot_type=="1. Scatter: 2 indicators 1 date (end)":
         data_y = np.log(data_y)  
         suffix_y = ", log"
         
+    x_label = ticker_x0+suffix_x
+    y_label = ticker_y0+suffix_y
+    cols = ["Country", x_label, y_label]    
+    df_f = pd.concat([pd.Series(labels,name=cols[0]), pd.Series(data_x,name=cols[1]), pd.Series(data_y,name=cols[2])],axis=1)  
+    
     ax.scatter(data_x,data_y,color=(0.45, 0.45, 0.45), s=10)
     if y_x:
         xpoints = ypoints = ax.get_xlim()
         ax.plot(xpoints, ypoints, linestyle='--', color='r', lw=1, scalex=False, scaley=False)
         
-    ax.set_xlabel(ticker_x0+suffix_x)
-    ax.set_ylabel(ticker_y0+suffix_x)
+    ax.set_xlabel(x_label)
+    ax.set_ylabel(y_label)
     if labls:
         #ax.text(data_x,data_y, labels, fontsize=8,color=mymap[0]); 
         for i, txt in enumerate(labels):
@@ -169,7 +190,7 @@ if plot_type=="1. Scatter: 2 indicators 1 date (end)":
     #plt.legend()     
     plt.show()     
     st.pyplot(fig)
-elif plot_type=="2. Scatter: 1 indicator 2 dates":
+elif plot_type=="2. Scatter: 1 indicator (x) 2 dates":
     data_x = []
     data_y = []
     labels = []
@@ -254,13 +275,19 @@ elif plot_type=="2. Scatter: 1 indicator 2 dates":
     fig, ax = plt.subplots()
     #Lastdate = df.index[-1].strftime('%Y-%m-%d')
     #st.write(colnames)
+    x_label = ticker_x0+": "+date_st.strftime('%Y-%m-%d')+suffix_x
+    y_label = ticker_x0+": "+date.strftime('%Y-%m-%d')+suffix_y
+    cols = ["Country", x_label, y_label]    
+    df_f = pd.concat([pd.Series(labels,name=cols[0]), pd.Series(data_x,name=cols[1]), pd.Series(data_y,name=cols[2])],axis=1)   
+    
     ax.scatter(data_x,data_y,color=(0.45, 0.45, 0.45), s=10)
+    
     if y_x:
         xpoints = ypoints = ax.get_xlim()
         ax.plot(xpoints, ypoints, linestyle='--', color='r', lw=1, scalex=False, scaley=False)
         
-    ax.set_xlabel(ticker_x0+": "+date_st.strftime('%Y-%m-%d')+suffix_x)
-    ax.set_ylabel(ticker_x0+": "+date.strftime('%Y-%m-%d')+suffix_y)
+    ax.set_xlabel(x_label)
+    ax.set_ylabel(y_label)
     if labls:
         #ax.text(data_x,data_y, labels, fontsize=8,color=mymap[0]); 
         for i, txt in enumerate(labels):
@@ -277,9 +304,47 @@ elif plot_type=="2. Scatter: 1 indicator 2 dates":
     #plt.legend()     
     plt.show()     
     st.pyplot(fig)
-elif plot_type=="3. Plot: 1 indicator between 2 dates":
+elif plot_type=="3. Plot: 1 indicator (x) between 2 dates":
     st.write("Under construction")
-elif plot_type=="4. Bar: 2 indicators 1 date":
+elif plot_type=="4. Bar: 2 indicators 1 date (end)":
     st.write("Under construction")
-elif plot_type=="5. Bar stacked: 1 indicator between 2 dates":
+elif plot_type=="5. Bar stacked: 1 indicator (x) between 2 dates":
     st.write("Under construction")    
+    
+cols=st.columns(3)
+with cols[0]:    
+    if plot_type:
+        buffer = io.BytesIO()
+        with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:    
+            df_f.to_excel(writer, sheet_name='Sheet1', index=True)    
+        download2 = st.download_button(
+            label="Excel",
+            data=buffer,
+            file_name=plot_type+".xlsx",
+            mime='application/vnd.ms-excel'
+        )
+with cols[1]:    
+  #  @st.cache
+    def convert_df(df):
+        # IMPORTANT: Cache the conversion to prevent computation on every rerun
+        return df.to_csv().encode('utf-8')
+    
+    if plot_type:
+        csv = convert_df(df)    
+        st.download_button(
+            label="CSV",
+            data=csv,
+            file_name=plot_type+".csv",
+            mime='text/csv',
+        )
+with cols[2]:
+    fn = plot_type+".png"
+    if plot_type:
+        plt.savefig(fn)
+        with open(fn, "rb") as img:
+            btn = st.download_button(
+                label="JPG",
+                data=img,
+                file_name=fn,
+                mime="image/png"
+            )
