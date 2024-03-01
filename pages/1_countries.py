@@ -329,8 +329,6 @@ with cols[1]:
          p1 = ax.plot(df_1_d, color=mymap[0], label='PPP, internationl $',linewidth=0.8) 
          ax.axvline(x=datetime(date.today().year-1, 12, 31), color = mymap[0],linestyle='--')
          last1 = df_1_d.loc[datetime(date.today().year-1, 12, 31).strftime('%Y-%m-%d')]
-         #pop_10Y = df_1_d.loc[datetime(date.today().year-10, 12, 31).strftime('%Y-%m-%d')]
-         #pop_pch = ((pop_last.values[0]/pop_10Y.values[0])**(1/10)-1)*100
          ax.text(datetime(date.today().year-1, 12, 31), last1, last1.values[0], fontsize=8,color=mymap[0]);
          ax2 = ax.twinx()
          p2 = ax2.plot(df_2_d, color=mymap[1], label='USD, rhs',linewidth=0.8) 
