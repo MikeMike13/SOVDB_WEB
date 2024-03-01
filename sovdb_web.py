@@ -54,7 +54,11 @@ st.set_page_config(
 
 st.sidebar.success("Select a demo above.")
 
-st.write("Available data: [link](https://docs.google.com/spreadsheets/d/15xyVYbzi04rBfxX4c9wfemcV-BD0pjvb6oCO-2KPGnM/edit#gid=0)")
+cols=st.columns(4)
+with cols[0]:
+    st.write("Available data: [link](https://docs.google.com/spreadsheets/d/15xyVYbzi04rBfxX4c9wfemcV-BD0pjvb6oCO-2KPGnM/edit#gid=0)")
+with cols[1]:
+    st.write("Countries shorts: [link](https://docs.google.com/spreadsheets/d/1G1nJ0Nyp9nkj5znIAx0dcB3-nZsiXiyPDAvqMZvrC9E/edit?usp=sharing)")
 
 cols=st.columns(2)
 with cols[0]:

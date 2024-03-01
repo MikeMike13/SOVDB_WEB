@@ -1,10 +1,11 @@
 import streamlit as st
 import psycopg2 as ps
 import pandas as pd
-import math
+#import math
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
+from datetime import date, datetime
 
 conn = ps.connect(database = "sovdb", 
                         user = "mike", 
@@ -116,7 +117,10 @@ with cols[0]:
     
      
      if rows_1x.size !=0 and rows_2x.size != 0:
-         fig, ax = plt.subplots()
+         #fig, ax = plt.subplots()
+         #plt.figure(figsize=(10,6))
+         fig = plt.figure()
+         ax = fig.add_subplot(1, 1, 1)
          
          query = "SELECT * FROM sovdb_schema.\""+ticker1_sel+"\""    
          cur.execute(query);
@@ -140,6 +144,7 @@ with cols[0]:
          #st.write(colnames)
          ax.plot(df_1_d, color=mymap[0], label='gdp growth',linewidth=0.8) 
          ax.plot(df_2_d, color=mymap[1], label='cpi, avg',linewidth=0.8) 
+         ax.axvline(x=datetime(date.today().year-1, 12, 31), color = mymap[0],linestyle='--')
          ax.axhline(y=0, color=(0.15, 0.15, 0.15), linestyle='-',linewidth=0.75)
          
          if limit_y:
@@ -151,13 +156,73 @@ with cols[0]:
               
              
          plt.title("Growth vs inflation") 
-         plt.legend() 
+         plt.legend(loc=0,frameon=False) 
 
          formatter = matplotlib.dates.DateFormatter('%Y')
          ax.xaxis.set_major_formatter(formatter)
          plt.show() 
          st.pyplot(fig)
+with cols[1]:
+     ticker1 = "NGDP_R_Y_WEO"
+     ticker1_sel = key+"_"+ticker1
+     #check if exists     
+     query_s = "SELECT * FROM sovdb_schema.""macro_indicators"" WHERE ""ticker"" = '"+ticker1_sel+"'"    
+     cur.execute(query_s)
+     rows_1 = cur.fetchall()
+     rows_1x = np.array([*rows_1])
+     
+     ticker2 = "NGDPD_Y_WEO"
+     ticker2_sel = key+"_"+ticker2
+     #check if exists     
+     query_s = "SELECT * FROM sovdb_schema.""macro_indicators"" WHERE ""ticker"" = '"+ticker2_sel+"'"    
+     cur.execute(query_s)
+     rows_2 = cur.fetchall()
+     rows_2x = np.array([*rows_2])   
     
+     
+     if rows_1x.size !=0 and rows_2x.size != 0:
+         #fig, ax = plt.subplots()
+         #fig = plt.figure(figsize=(10,8))
+         fig = plt.figure()
+         ax = fig.add_subplot(1, 1, 1)
+         #plt.figure(figsize=(10,6))
+         
+                 
+         query = "SELECT * FROM sovdb_schema.\""+ticker1_sel+"\""    
+         cur.execute(query);
+         rows = cur.fetchall()
+         colnames = [desc[0] for desc in cur.description]
+         df_1_d = pd.DataFrame(rows,columns=colnames)
+         df_1_d = pd.DataFrame(df_1_d).set_index('Date')
+         df_1_d.index = pd.to_datetime(df_1_d.index)         
+         df_1_d = df_1_d[(df_1_d.index >= st_date.strftime('%Y-%m-%d'))]
+         
+         query = "SELECT * FROM sovdb_schema.\""+ticker2_sel+"\""    
+         cur.execute(query);
+         rows = cur.fetchall()
+         colnames = [desc[0] for desc in cur.description]
+         df_2_d = pd.DataFrame(rows,columns=colnames)
+         df_2_d = pd.DataFrame(df_2_d).set_index('Date')
+         df_2_d.index = pd.to_datetime(df_2_d.index)
+         df_2_d = df_2_d[(df_2_d.index >= st_date.strftime('%Y-%m-%d'))]
+         
+         #Lastdate = df.index[-1].strftime('%Y-%m-%d')
+         #st.write(colnames)
+         p1 = ax.plot(df_1_d, color=mymap[0],  label='gdp, constant',linewidth=0.8) 
+         ax.axvline(x=datetime(date.today().year-1, 12, 31), color = mymap[0],linestyle='--')
+         ax2 = ax.twinx()
+         p2 = ax2.plot(df_2_d, color=mymap[1], label='gdp, bln USD, rhs',linewidth=0.8)               
+             
+         plt.title("GDP: const vs USD") 
+         p12 = p1+p2
+         labs = [l.get_label() for l in p12]
+         ax.legend(p12, labs, loc=4, frameon=False)
+        # ax2.legend(['gdp, constant','gdp, bln USD, rhs'], loc=4) 
+
+         formatter = matplotlib.dates.DateFormatter('%Y')
+         ax.xaxis.set_major_formatter(formatter)
+         plt.show() 
+         st.pyplot(fig)    
              
 st.subheader('Fiscal')            
 st.subheader('External')
