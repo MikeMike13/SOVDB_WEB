@@ -71,7 +71,7 @@ with cols[4]:
 plot_type = st.selectbox("Choose plot type",("","1. Scatter: 2 indicators 1 date (end)",\
                                              "2. Scatter: 1 indicator (x) 2 dates",\
                                              "3. Plot: 1 indicator (x) between 2 dates",\
-                                             "4. Bar: 2 indicators 1 date (end)",\
+                                             "4. Bar: 2 indicators 1 date (end) - peers only",\
                                              "5. Bar stacked: 1 indicator (x) between 2 dates"), index=0)   
 
 
@@ -306,8 +306,69 @@ elif plot_type=="2. Scatter: 1 indicator (x) 2 dates":
     st.pyplot(fig)
 elif plot_type=="3. Plot: 1 indicator (x) between 2 dates":
     st.write("Under construction")
-elif plot_type=="4. Bar: 2 indicators 1 date (end)":
-    st.write("Under construction")
+elif plot_type=="4. Bar: 2 indicators 1 date (end) - peers only":
+    #st.write("Under construction")
+    peers_tick = "PP_"+peers    
+    query = "SELECT * FROM sovdb_schema.\""+peers_tick+"\""    
+    cur.execute(query);
+    rows = cur.fetchall()
+    colnames = [desc[0] for desc in cur.description]
+    df_peers = pd.DataFrame(rows,columns=colnames)
+    peers_m_key = df_peers.m_key
+    peers_names = df_peers.country
+    #st.write(peers_names)
+    peers_indic_1 = []
+    peers_indic_2 = []
+    
+    for peer in peers_m_key:
+        ticker1 = peer+"_"+ticker_x0        
+        query = "SELECT * FROM sovdb_schema.\""+ticker1+"\"  WHERE \"""Date\""" ='"+date.strftime('%d-%b-%Y')+"'"  
+        cur.execute(query);
+        rows = cur.fetchall()
+        rows_x = np.array([*rows])       
+        if rows_x.size!=0:
+            peers_indic_1.append(rows_x[0][1])
+        else:
+            peers_indic_1.append(0)
+ 
+        ticker2 = peer+"_"+ticker_y0        
+        query = "SELECT * FROM sovdb_schema.\""+ticker2+"\"  WHERE \"""Date\""" ='"+date.strftime('%d-%b-%Y')+"'"  
+        cur.execute(query);
+        rows = cur.fetchall()
+        rows_x = np.array([*rows])        
+        if rows_x.size!=0:
+            peers_indic_2.append(rows_x[0][1])
+        else:
+            peers_indic_2.append(0)
+    
+    
+    df_peers_data = pd.DataFrame(
+                                    {ticker_x0: peers_indic_1,                                    
+                                     ticker_y0: peers_indic_2
+                                    },index=peers_m_key)
+    
+    df_peers_data = df_peers_data.sort_values(by=[ticker_x0], ascending=False)
+    df_f = df_peers_data
+    barWidth = 0.25
+    br1 = np.arange(len(peers_m_key))
+    br2 = [x + barWidth for x in br1] 
+    
+    fig, ax = plt.subplots(layout='constrained')
+    
+    p1 = ax.bar(br1, df_peers_data[ticker_x0], color=mymap[0], label=ticker_x0,width = barWidth,) 
+    ax2 = ax.twinx()
+    p2 = ax2.bar(br2, df_peers_data[ticker_y0], color=mymap[1], label=ticker_y0, width = barWidth,)   
+    p12 = p1+p2    
+    
+    plt.xticks([r + barWidth for r in range(len(peers_m_key))], 
+        df_peers_data.index)
+    if len(peers_m_key)>15:
+        ax.set_xticklabels(df_peers_data.index,fontsize=8, rotation=90)        
+        
+    plt.legend(p12, [ticker_x0, ticker_y0], frameon=False)
+    plt.show() 
+    st.pyplot(fig)    
+        
 elif plot_type=="5. Bar stacked: 1 indicator (x) between 2 dates":
     st.write("Under construction")    
     
