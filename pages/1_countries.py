@@ -189,7 +189,9 @@ with cols[0]:
          #Lastdate = df.index[-1].strftime('%Y-%m-%d')
          #st.write(colnames)
          ax.plot(df_1_d, color=mymap[0], label='gdp growth',linewidth=0.8) 
+         ax.text(df_1_d.index[-1], df_1_d.values[-1][0], round(df_1_d.values[-1][0],2), fontsize=8,color=mymap[0])#
          ax.plot(df_2_d, color=mymap[1], label='cpi, avg',linewidth=0.8) 
+         ax.text(df_2_d.index[-1], df_2_d.values[-1][0], round(df_2_d.values[-1][0],2), fontsize=8,color=mymap[1])#
          ax.axvline(x=datetime(date.today().year-1, 12, 31), color = mymap[0],linestyle='--')
          ax.axhline(y=0, color=(0.15, 0.15, 0.15), linestyle='-',linewidth=0.75)
          
@@ -269,6 +271,7 @@ with cols[1]:
          ax.xaxis.set_major_formatter(formatter)
          plt.show() 
          st.pyplot(fig)    
+
 cols=st.columns(2)        
 with cols[0]:
      ticker1 = "LP_Y_WEO"
@@ -521,6 +524,69 @@ with cols[1]:
          ax.xaxis.set_major_formatter(formatter)
          plt.show() 
          st.pyplot(fig)
+
+cols=st.columns(2)        
+with cols[0]:
+    ticker1 = "GGXWDG_NGDP_Y_WEO"
+    #st.write(ticker1)
+    ticker1_sel = key+"_"+ticker1
+    #check if exists     
+    query_s = "SELECT * FROM sovdb_schema.""macro_indicators"" WHERE ""ticker"" = '"+ticker1_sel+"'"    
+    cur.execute(query_s)
+    rows_1 = cur.fetchall()
+    rows_1x = np.array([*rows_1])
+    
+    #ticker2 = "NGDPDPC_Y_WEO"
+    #ticker2_sel = key+"_"+ticker2
+    #check if exists     
+    #query_s = "SELECT * FROM sovdb_schema.""macro_indicators"" WHERE ""ticker"" = '"+ticker2_sel+"'"    
+    #cur.execute(query_s)
+    #rows_2 = cur.fetchall()
+    #rows_2x = np.array([*rows_2])      
+    
+    
+    if rows_1x.size !=0 :
+        #fig, ax = plt.subplots()
+        #plt.figure(figsize=(10,6))
+        fig = plt.figure()
+        ax = fig.add_subplot(1, 1, 1)
+        
+        query = "SELECT * FROM sovdb_schema.\""+ticker1_sel+"\""    
+        cur.execute(query);
+        rows = cur.fetchall()
+        colnames = [desc[0] for desc in cur.description]
+        df_1_d = pd.DataFrame(rows,columns=colnames)
+        df_1_d = pd.DataFrame(df_1_d).set_index('Date')
+        df_1_d.index = pd.to_datetime(df_1_d.index)         
+        df_1_d = df_1_d[(df_1_d.index >= st_date.strftime('%Y-%m-%d'))]
+        #st.write(df_1_d)
+        #query = "SELECT * FROM sovdb_schema.\""+ticker2_sel+"\""    
+        #cur.execute(query);
+        #rows = cur.fetchall()
+        #colnames = [desc[0] for desc in cur.description]
+        #df_2_d = pd.DataFrame(rows,columns=colnames)
+        #df_2_d = pd.DataFrame(df_2_d).set_index('Date')
+        #df_2_d.index = pd.to_datetime(df_2_d.index)
+        #df_2_d = df_2_d[(df_2_d.index >= st_date.strftime('%Y-%m-%d'))]
+        
+        p1 = ax.plot(df_1_d, color=mymap[0], label='% GDP',linewidth=0.8) 
+        ax.axvline(x=datetime(date.today().year-1, 12, 31), color = mymap[0],linestyle='--')
+        last1 = df_1_d.loc[datetime(date.today().year-1, 12, 31).strftime('%Y-%m-%d')]
+        ax.text(datetime(date.today().year-1, 12, 31), last1, last1.values[0], fontsize=8,color=mymap[0]);
+        #ax2 = ax.twinx()
+        #p2 = ax2.plot(df_2_d, color=mymap[1], label='USD, rhs',linewidth=0.8) 
+        #last2 = df_2_d.loc[datetime(date.today().year-1, 12, 31).strftime('%Y-%m-%d')]
+        #ax2.text(datetime(date.today().year-1, 12, 31), last2, last2.values[0], fontsize=8,color=mymap[1]);
+        
+        plt.title("GG Debt") 
+        #p12 = p1+p2
+        #labs = [l.get_label() for l in p12]
+        #ax.legend(p12, labs, loc=4, frameon=False)
+    
+        formatter = matplotlib.dates.DateFormatter('%Y')
+        ax.xaxis.set_major_formatter(formatter)
+        plt.show() 
+        st.pyplot(fig)
          
 st.subheader('External')
 cols=st.columns(2)        
