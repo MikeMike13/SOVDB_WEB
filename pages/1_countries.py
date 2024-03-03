@@ -168,30 +168,39 @@ with cols[0]:
          fig = plt.figure()
          ax = fig.add_subplot(1, 1, 1)
          
-         query = "SELECT * FROM sovdb_schema.\""+ticker1_sel+"\""    
+         query = "SELECT * FROM sovdb_schema.\""+ticker1_sel+"\" WHERE \"""Date\""">='"+st_date.strftime('%Y-%m-%d')+"'"    
          cur.execute(query);
          rows = cur.fetchall()
          colnames = [desc[0] for desc in cur.description]
          df_1_d = pd.DataFrame(rows,columns=colnames)
          df_1_d = pd.DataFrame(df_1_d).set_index('Date')
          df_1_d.index = pd.to_datetime(df_1_d.index)         
-         df_1_d = df_1_d[(df_1_d.index >= st_date.strftime('%Y-%m-%d'))]
+                  
+         end_window = 2019
+         window_step = 10
+         gdp_g_last = df_1_d.loc[datetime(end_window-window_step+1, 12, 31).strftime('%Y-%m-%d'):datetime(end_window, 12, 31).strftime('%Y-%m-%d')].mean()[0]         
+         df_g = pd.DataFrame(np.repeat(gdp_g_last,10), index=pd.date_range(start=datetime(end_window-window_step+1, 12, 31).strftime('%Y-%m-%d'), end=datetime(end_window, 12, 31).strftime('%Y-%m-%d'), freq='Y'))         
          
-         query = "SELECT * FROM sovdb_schema.\""+ticker2_sel+"\""    
+         query = "SELECT * FROM sovdb_schema.\""+ticker2_sel+"\" WHERE \"""Date\""">='"+st_date.strftime('%Y-%m-%d')+"'"    
          cur.execute(query);
          rows = cur.fetchall()
          colnames = [desc[0] for desc in cur.description]
          df_2_d = pd.DataFrame(rows,columns=colnames)
          df_2_d = pd.DataFrame(df_2_d).set_index('Date')
          df_2_d.index = pd.to_datetime(df_2_d.index)
-         df_2_d = df_2_d[(df_2_d.index >= st_date.strftime('%Y-%m-%d'))]
-         
-         #Lastdate = df.index[-1].strftime('%Y-%m-%d')
-         #st.write(colnames)
+         cpi_last = df_2_d.loc[datetime(end_window-window_step+1, 12, 31).strftime('%Y-%m-%d'):datetime(end_window, 12, 31).strftime('%Y-%m-%d')].mean()[0]         
+         df_c = pd.DataFrame(np.repeat(cpi_last,10), index=pd.date_range(start=datetime(end_window-window_step+1, 12, 31).strftime('%Y-%m-%d'), end=datetime(end_window, 12, 31).strftime('%Y-%m-%d'), freq='Y'))         
+                  
          ax.plot(df_1_d, color=mymap[0], label='gdp growth',linewidth=0.8) 
+         ax.plot(df_g, color=mymap[0], linewidth=0.8) 
          ax.text(df_1_d.index[-1], df_1_d.values[-1][0], round(df_1_d.values[-1][0],2), fontsize=8,color=mymap[0])#
+         ax.text(df_g.index[-1], df_g.values[-1][0], round(df_g.values[-1][0],2), fontsize=8,color=mymap[0])#
+
          ax.plot(df_2_d, color=mymap[1], label='cpi, avg',linewidth=0.8) 
+         ax.plot(df_c, color=mymap[1], linewidth=0.8) 
          ax.text(df_2_d.index[-1], df_2_d.values[-1][0], round(df_2_d.values[-1][0],2), fontsize=8,color=mymap[1])#
+         ax.text(df_c.index[-1], df_c.values[-1][0], round(df_c.values[-1][0],2), fontsize=8,color=mymap[1])#
+         
          ax.axvline(x=datetime(date.today().year-1, 12, 31), color = mymap[0],linestyle='--')
          ax.axhline(y=0, color=(0.15, 0.15, 0.15), linestyle='-',linewidth=0.75)
          
@@ -317,9 +326,11 @@ with cols[0]:
          
          p1 = ax.plot(df_1_d, color=mymap[0], label='population',linewidth=0.8) 
          ax.axvline(x=datetime(date.today().year-1, 12, 31), color = mymap[0],linestyle='--')
+         
          pop_last = df_1_d.loc[datetime(date.today().year-1, 12, 31).strftime('%Y-%m-%d')]
          pop_10Y = df_1_d.loc[datetime(date.today().year-10, 12, 31).strftime('%Y-%m-%d')]
          pop_pch = ((pop_last.values[0]/pop_10Y.values[0])**(1/10)-1)*100
+         
          ax.text(datetime(date.today().year-1, 12, 31), pop_last, "10Y: "+str(round(pop_pch,1))+"%", fontsize=8,color='r');
          ax2 = ax.twinx()
          p2 = ax2.plot(df_2_d, color=mymap[1], label='fertility rate, rhs',linewidth=0.8) 
