@@ -348,7 +348,7 @@ count_sel = df.name
 #groups = df.group.unique()
 
 #budget - DROP
-groups = ['real','external','fiscal','popul','markets','eco','covid','finance','institute','budget','all']
+groups = ['real','external','fiscal','popul','market','eco','covid','finance','institute','budget','all']
 
 tot_str = "("
 for i in range(0,len(groups)-1):
