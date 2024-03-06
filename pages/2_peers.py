@@ -6,38 +6,54 @@ import matplotlib.pyplot as plt
 from io import BytesIO
 import io
 
-mymap = ['#0051CA', '#F8AC27', '#3F863F', '#C6DBA1', '#FDD65F', '#FBEEBD', '#50766E'];
-    
 conn = ps.connect(database = "sovdb", 
                         user = "mike", 
                         host= '185.26.120.148',
                         password = "mikesovdb13",
                         port = 5432)
 
+def ticker_exists(ticker):
+     query_s = "SELECT * FROM sovdb_schema.""macro_indicators"" WHERE ""ticker"" = '"+ticker+"'"    
+     cur = conn.cursor()
+     cur.execute(query_s)
+     rows = cur.fetchall()
+     rows = np.array([*rows])
+     return rows.size !=0
+
+def sovdb_read(ticker, date):
+    query = "SELECT * FROM sovdb_schema.\""+ticker+"\" WHERE \"""Date\""">='"+date.strftime('%Y-%m-%d')+"'"    
+    cur = conn.cursor()
+    cur.execute(query);
+    rows = cur.fetchall()
+    colnames = [desc[0] for desc in cur.description]
+    df = pd.DataFrame(rows,columns=colnames)
+    df = pd.DataFrame(df).set_index('Date')
+    df.index = pd.to_datetime(df.index)    
+    return df
+    
+def sovdb_read_gen(ticker):
+    selectquery = "SELECT * FROM sovdb_schema.\""+ticker+"\""
+    cur = conn.cursor()
+    cur.execute(selectquery);
+    rows = cur.fetchall()
+    colnames = [desc[0] for desc in cur.description]
+    df = pd.DataFrame(rows,columns=colnames)     
+    return df
+
+mymap = ['#0051CA', '#F8AC27', '#3F863F', '#C6DBA1', '#FDD65F', '#FBEEBD', '#50766E'];
+  
 df_f = pd.DataFrame({'A' : []})
 
-#get all countries m_key
-query = "SELECT * FROM sovdb_schema.countries"
-cur = conn.cursor()
-cur.execute(query);
-rows = cur.fetchall()
-colnames = [desc[0] for desc in cur.description]
-df = pd.DataFrame(rows,columns=colnames)
-m_keys = df.m_key
-#st.write(df)
-countries = df.name
+#df_macroind = sovdb_read_gen("macro_indicators")
+
+#get all countries and its keys
+df_countr = sovdb_read_gen("countries")
+m_keys = df_countr.m_key
+countries = df_countr.name
 
 #get all peers
-query = "SELECT * FROM sovdb_schema.peers"
-cur = conn.cursor()
-cur.execute(query);
-rows = cur.fetchall()
-colnames = [desc[0] for desc in cur.description]
-df = pd.DataFrame(rows,columns=colnames)
+df = sovdb_read_gen("peers")
 peers = df.p_key
-#st.write(df.p_key)
-#countries = df.name
-#st.write(m_keys)
 
 cols=st.columns(4)
 with cols[0]:
@@ -51,14 +67,15 @@ with cols[3]:
 
 cols=st.columns(2)
 with cols[0]:
-    country_sel = st.selectbox("Country",countries, index=203)
+    country_sel = st.selectbox("Country",countries, index=203)    
+    country_sel_key = df_countr[df_countr.name==country_sel]['m_key'].values[0]
 with cols[1]:
     peers = st.selectbox("Peers",peers, index=0)
 
     
 cols=st.columns(5)
 with cols[0]:
-    labls = st.checkbox('show labels',1) 
+    labls = st.checkbox('all peers labels',0) 
 with cols[1]:
     log_x = st.checkbox('log x',0) 
 with cols[2]:
@@ -66,75 +83,72 @@ with cols[2]:
 with cols[3]:
     y_x = st.checkbox('y=x',0) 
 with cols[4]:
-    show_all = st.checkbox('show all',1) 
+    all_peers = st.selectbox("All peers",("WEO","EM","DM","All"), index=0)
     
 plot_type = st.selectbox("Choose plot type",("","1. Scatter: 2 indicators 1 date (end)",\
                                              "2. Scatter: 1 indicator (x) 2 dates",\
                                              "3. Plot: 1 indicator (x) between 2 dates",\
                                              "4. Bar: 2 indicators 1 date (end) - peers only",\
-                                             "5. Bar stacked: 1 indicator (x) between 2 dates"), index=0)   
-
-
+                                             "5. Bar stacked: 1 indicator (x) between 2 dates",\
+                                             "6. Bar: 1 indicator (x) 1 date (end)"), index=0)   
+  
+#get small peers keys
+peers_sm_key = "PP_"+peers
+df = sovdb_read_gen(peers_sm_key)
+peers_s_keys = df.m_key 
+        
 if plot_type=="1. Scatter: 2 indicators 1 date (end)":
     data_x = []
     data_y = []
+    data_x_sm = []
+    data_y_sm = []
+    data_x_cn = []
+    data_y_cn = []
     labels = []
+    labels_sm = []
+    labels_cn = []
     suffix_x = ""
     suffix_y = ""
-    for key in m_keys:
+    
+    temp = country_sel_key+"_"+ticker_x0    
+    query_s = "SELECT ""short_name"" FROM sovdb_schema.""macro_indicators"" WHERE ""ticker"" = '"+temp+"'"    
+    cur = conn.cursor()
+    cur.execute(query_s)
+    rows = cur.fetchall()
+    rows = np.array([*rows])   
+    indic_x_eng = rows[0][0]    
+        
+    temp = country_sel_key+"_"+ticker_y0
+    query_s = "SELECT ""short_name"" FROM sovdb_schema.""macro_indicators"" WHERE ""ticker"" = '"+temp+"'"    
+    cur = conn.cursor()
+    cur.execute(query_s)
+    rows = cur.fetchall()
+    rows = np.array([*rows])   
+    indic_y_eng = rows[0][0]  
+    
+    
+    if all_peers == "All":
+        all_peers_keys = m_keys
+    else:
+        peers_key = "PP_"+all_peers
+        df = sovdb_read_gen(peers_key)        
+        all_peers_keys = df.m_key 
+        
+    #get broad peers
+    for key in all_peers_keys:
         ticker_x = key+"_"+ticker_x0
-        #st.write(ticker_x)
+        is_x = ticker_exists(ticker_x)
+       
         ticker_y = key+"_"+ticker_y0
-        #check if exists
-        query = "SELECT * FROM sovdb_schema.""macro_indicators"" WHERE ""ticker"" = '"+ticker_x+"'"    
-       # cur = conn.cursor()
-        cur.execute(query);
-        rows_x = cur.fetchall()
-        rows_xx = np.array([*rows_x])
-        colnames = [desc[0] for desc in cur.description]
-        df_x = pd.DataFrame(rows_x,columns=colnames)
-        
-        query = "SELECT * FROM sovdb_schema.""macro_indicators"" WHERE ""ticker"" = '"+ticker_y+"'"    
-       # cur = conn.cursor()
-        cur.execute(query);
-        rows_y = cur.fetchall()
-        rows_yy = np.array([*rows_y])
-        colnames = [desc[0] for desc in cur.description]
-        df_y = pd.DataFrame(rows_y,columns=colnames)
-        
-        if rows_xx.size !=0 and rows_yy.size != 0:        
-            #st.write(ticker_x)
-            #st.write(df_x.index[-1].values)
-            #if df_x.end_date.values > date and df_y.end_date.values > date:
-            query = "SELECT * FROM sovdb_schema.\""+ticker_x+"\""    
-            cur.execute(query);
-            rows = cur.fetchall()
-            colnames = [desc[0] for desc in cur.description]
-            df_x_d = pd.DataFrame(rows,columns=colnames)
-            df_x_d = pd.DataFrame(df_x_d).set_index('Date')
-            df_x_d.index = pd.to_datetime(df_x_d.index)
+        is_y = ticker_exists(ticker_y)               
+        if is_x and is_y:                                
             
-            query = "SELECT * FROM sovdb_schema.\""+ticker_y+"\""    
-            cur.execute(query);
-            rows = cur.fetchall()
-            colnames = [desc[0] for desc in cur.description]
-            df_y_d = pd.DataFrame(rows,columns=colnames)
-            df_y_d = pd.DataFrame(df_y_d).set_index('Date')
-            df_y_d.index = pd.to_datetime(df_y_d.index)     
-            
-            
-            if df_x_d.index[-1].date() >= date and df_y_d.index[-1].date() >= date:
-                #st.write(df_x.index[-1].values)
-                
-                #query = "SELECT * FROM sovdb_schema.\""+ticker_x+"\"  WHERE \"""Date\""" ='"+date.strftime('%d-%b-%Y')+"'"    
-                #cur.execute(query);
-                #rows = cur.fetchall()
-                #rows = np.array([*rows])
-                #st.write(key)
-                #st.write(df_x_d[(df_x_d.index == date.strftime('%Y-%m-%d')) ])
-                x_down = df_x_d[(df_x_d.index == date.strftime('%Y-%m-%d'))]
-                y_down = df_y_d[(df_y_d.index == date.strftime('%Y-%m-%d'))]
-                #st.write(type(x_down))
+            df_x = sovdb_read(ticker_x, date)
+            df_y = sovdb_read(ticker_y, date)
+                        
+            if ~df_x.empty and ~df_y.empty:            
+                x_down = df_x[(df_x.index == date.strftime('%Y-%m-%d'))]
+                y_down = df_y[(df_y.index == date.strftime('%Y-%m-%d'))]                
                 if x_down.size == 0:
                     data_x.append(0)
                 else:
@@ -144,30 +158,83 @@ if plot_type=="1. Scatter: 2 indicators 1 date (end)":
                     data_y.append(0)
                 else:
                     data_y.append(y_down.values[0][0])
-                labels.append(key)
+                labels.append(key)        
+    #get small peers
+    for key in peers_s_keys:
+        ticker_x = key+"_"+ticker_x0
+        is_x = ticker_exists(ticker_x)
+       
+        ticker_y = key+"_"+ticker_y0
+        is_y = ticker_exists(ticker_y)               
+        if is_x and is_y:                                
+            
+            df_x = sovdb_read(ticker_x, date)
+            df_y = sovdb_read(ticker_y, date)
+                        
+            if ~df_x.empty and ~df_y.empty:            
+                x_down = df_x[(df_x.index == date.strftime('%Y-%m-%d'))]
+                y_down = df_y[(df_y.index == date.strftime('%Y-%m-%d'))]                
+                if x_down.size == 0:
+                    data_x_sm.append(0)
+                else:
+                    data_x_sm.append(x_down.values[0][0])
+                    
+                if y_down.size == 0:
+                    data_y_sm.append(0)
+                else:
+                    data_y_sm.append(y_down.values[0][0])
+                labels_sm.append(key)  
+    
+    #get selected countries data    
+    ticker_x = country_sel_key+"_"+ticker_x0
+    is_x = ticker_exists(ticker_x)
+   
+    ticker_y = country_sel_key+"_"+ticker_y0
+    is_y = ticker_exists(ticker_y)               
+    if is_x and is_y:                                
         
-    #st.write(data_x)    
-    #st.write(data_y)    
-    #st.write(labels) 
+        df_x = sovdb_read(ticker_x, date)
+        df_y = sovdb_read(ticker_y, date)
+                    
+        if ~df_x.empty and ~df_y.empty:            
+            x_down = df_x[(df_x.index == date.strftime('%Y-%m-%d'))]
+            y_down = df_y[(df_y.index == date.strftime('%Y-%m-%d'))]                
+            if x_down.size == 0:
+                data_x_cn.append(0)
+            else:
+                data_x_cn.append(x_down.values[0][0])
+                
+            if y_down.size == 0:
+                data_y_cn.append(0)
+            else:
+                data_y_cn.append(y_down.values[0][0])
+            labels_cn.append(country_sel_key)              
+            
     
     fig, ax = plt.subplots()
-    #Lastdate = df.index[-1].strftime('%Y-%m-%d')
-    #st.write(colnames)
-    
-       
+           
     if log_x:
         data_x = np.log(data_x)
+        data_x_sm = np.log(data_x_sm)
+        data_x_cn = np.log(data_x_cn)
         suffix_x = ", log"
     if log_y:
         data_y = np.log(data_y)  
+        data_y_sm = np.log(data_y_sm)
+        data_y_cn = np.log(data_y_cn)
         suffix_y = ", log"
         
-    x_label = ticker_x0+suffix_x
-    y_label = ticker_y0+suffix_y
+    x_label = indic_x_eng+suffix_x
+    y_label = indic_y_eng+suffix_y
     cols = ["Country", x_label, y_label]    
     df_f = pd.concat([pd.Series(labels,name=cols[0]), pd.Series(data_x,name=cols[1]), pd.Series(data_y,name=cols[2])],axis=1)  
     
+    #plot broad peers
     ax.scatter(data_x,data_y,color=(0.45, 0.45, 0.45), s=10)
+    #plot small peers
+    ax.scatter(data_x_sm,data_y_sm,color=mymap[0], s=10)
+    #selected country
+    ax.scatter(data_x_cn,data_y_cn,color=mymap[1], s=10)
     if y_x:
         xpoints = ypoints = ax.get_xlim()
         ax.plot(xpoints, ypoints, linestyle='--', color='r', lw=1, scalex=False, scaley=False)
@@ -175,21 +242,19 @@ if plot_type=="1. Scatter: 2 indicators 1 date (end)":
     ax.set_xlabel(x_label)
     ax.set_ylabel(y_label)
     if labls:
-        #ax.text(data_x,data_y, labels, fontsize=8,color=mymap[0]); 
         for i, txt in enumerate(labels):
             #https://matplotlib.org/stable/gallery/text_labels_and_annotations/text_alignment.html
             ax.annotate(txt, (data_x[i], data_y[i]),ha='left', va='bottom', size=8)
-    #st.write(type(df))
-    #if bool_y:
-    #    ax.axhline(y=y_level, color=(0.15, 0.15, 0.15), linestyle='-',linewidth=0.75)
-    #if bool_c and period_calc != 'no start value' and period_calc != 'no end value':
-    #if bool_c and Start_val*End_val:    
-    #    ax.plot(Start_date_c, Start_val, marker=5,color=(1,0,0)) 
-    #    ax.plot(End_date_c, End_val, marker=4,color=(1,0,0)) 
-    #plt.title(ticker+", "+Lastdate) 
-    #plt.legend()     
+    for i, txt in enumerate(labels_sm):        
+        ax.annotate(txt, (data_x_sm[i], data_y_sm[i]),ha='left', va='bottom', size=8)
+    
+    ax.annotate(labels_cn[0], (data_x_cn[0], data_y_cn[0]),ha='left', va='bottom', size=8)
+        
+    plt.title(country_sel+" vs "+peers+" vs "+all_peers+": "+date.strftime('%Y-%m-%d'))
     plt.show()     
     st.pyplot(fig)
+
+
 elif plot_type=="2. Scatter: 1 indicator (x) 2 dates":
     data_x = []
     data_y = []
@@ -201,7 +266,7 @@ elif plot_type=="2. Scatter: 1 indicator (x) 2 dates":
         
         #check if exists
         query = "SELECT * FROM sovdb_schema.""macro_indicators"" WHERE ""ticker"" = '"+ticker_x+"'"    
-       # cur = conn.cursor()
+        cur = conn.cursor()
         cur.execute(query);
         rows_x = cur.fetchall()
         rows_xx = np.array([*rows_x])
@@ -372,6 +437,9 @@ elif plot_type=="4. Bar: 2 indicators 1 date (end) - peers only":
 elif plot_type=="5. Bar stacked: 1 indicator (x) between 2 dates":
     st.write("Under construction")    
     
+elif plot_type=="6. Bar: 1 indicator (x) 1 date (end)":
+    st.write("Under construction")    
+    
 cols=st.columns(3)
 with cols[0]:    
     if plot_type:
@@ -409,3 +477,4 @@ with cols[2]:
                 file_name=fn,
                 mime="image/png"
             )
+            
