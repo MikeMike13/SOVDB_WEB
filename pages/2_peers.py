@@ -308,8 +308,7 @@ elif plot_type=="2. Scatter: 1 indicator (x) 2 dates":
                 #query = "SELECT * FROM sovdb_schema.\""+ticker_x+"\"  WHERE \"""Date\""" ='"+date.strftime('%d-%b-%Y')+"'"    
                 #cur.execute(query);
                 #rows = cur.fetchall()
-                #rows = np.array([*rows])
-                #st.write(key)
+                #rows = np.array([*rows])                
                 #st.write(df_x_d[(df_x_d.index == date.strftime('%Y-%m-%d')) ])
                 x_down = df_x_d[(df_x_d.index == date_st.strftime('%Y-%m-%d'))]
                 y_down = df_x_d[(df_x_d.index == date.strftime('%Y-%m-%d'))]
