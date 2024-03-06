@@ -374,7 +374,8 @@ elif plot_type=="4. Bar: 2 indicators 1 date (end) - peers only":
     #st.write("Under construction")
     peers_tick = "PP_"+peers    
     query = "SELECT * FROM sovdb_schema.\""+peers_tick+"\""    
-    cur.execute(query);
+    cur = conn.cursor()
+    cur.execute(query);            
     rows = cur.fetchall()
     colnames = [desc[0] for desc in cur.description]
     df_peers = pd.DataFrame(rows,columns=colnames)
@@ -387,6 +388,7 @@ elif plot_type=="4. Bar: 2 indicators 1 date (end) - peers only":
     for peer in peers_m_key:
         ticker1 = peer+"_"+ticker_x0        
         query = "SELECT * FROM sovdb_schema.\""+ticker1+"\"  WHERE \"""Date\""" ='"+date.strftime('%d-%b-%Y')+"'"  
+        cur = conn.cursor()
         cur.execute(query);
         rows = cur.fetchall()
         rows_x = np.array([*rows])       
@@ -397,6 +399,7 @@ elif plot_type=="4. Bar: 2 indicators 1 date (end) - peers only":
  
         ticker2 = peer+"_"+ticker_y0        
         query = "SELECT * FROM sovdb_schema.\""+ticker2+"\"  WHERE \"""Date\""" ='"+date.strftime('%d-%b-%Y')+"'"  
+        cur = conn.cursor()
         cur.execute(query);
         rows = cur.fetchall()
         rows_x = np.array([*rows])        
