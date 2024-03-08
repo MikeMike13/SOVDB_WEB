@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from io import BytesIO
 from datetime import datetime
 import io
+import matplotlib
 
 conn = ps.connect(database = "sovdb", 
                         user = "mike", 
@@ -209,11 +210,9 @@ if plot_type=="1. Scatter: 2 indicators 1 date (end)":
                 data_y_cn.append(0)
             else:
                 data_y_cn.append(y_down.values[0][0])
-            labels_cn.append(country_sel_key)              
-            
+            labels_cn.append(country_sel_key)                          
     
-    fig, ax = plt.subplots()
-           
+    fig, ax = plt.subplots()           
     if log_x:
         data_x = np.log(data_x)
         data_x_sm = np.log(data_x_sm)
@@ -381,6 +380,7 @@ elif plot_type=="2. Scatter: 1 indicator (x) 2 dates":
     st.pyplot(fig)
 
 elif plot_type=="3. Plot: 1 indicator (x) between 2 dates - peers only":    
+    norm_100 = st.checkbox('to 100',0) 
     fig, ax = plt.subplots()
     i=1
     for key in peers_s_keys:
@@ -402,6 +402,9 @@ elif plot_type=="3. Plot: 1 indicator (x) between 2 dates - peers only":
                     df_f = pd.concat([df_f, df_x], axis=1, ignore_index=False, sort=True, )
                     i=i+1
                    
+    if norm_100:
+        df_f = 100*(df_f / df_f.iloc[0, :])
+        ax.axhline(100, color=(0.15,0.15,0.15))
     #st.write(df_f)
     if log_y:
         df_f = np.log(df_f)
@@ -415,8 +418,11 @@ elif plot_type=="3. Plot: 1 indicator (x) between 2 dates - peers only":
     
     #fig.patch.set_facecolor((0.8, 0.8, 0.8))
     #ax.set_facecolor((0.8, 0.8, 0.8))
+    
     ax.axvline(x=datetime(date.today().year-1, 12, 31), color = mymap[0],linestyle='--')
     plt.title(indic_x_eng+suffix_y+": "+peers)    
+    formatter = matplotlib.dates.DateFormatter('%Y')
+    ax.xaxis.set_major_formatter(formatter)
     plt.show()     
     st.pyplot(fig)
     
@@ -479,8 +485,10 @@ elif plot_type=="4. Bar: 2 indicators 1 date (end) - peers only":
     p2 = ax2.bar(br2, df_peers_data[ticker_y0], color=mymap[1], label=ticker_y0, width = barWidth,)   
     p12 = p1+p2    
     
+    #set xtick labels
     plt.xticks([r + barWidth for r in range(len(peers_m_key))], 
         df_peers_data.index)
+    #rotate xtick labels
     if len(peers_m_key)>15:
         ax.set_xticklabels(df_peers_data.index,fontsize=8, rotation=90)        
         
@@ -489,10 +497,74 @@ elif plot_type=="4. Bar: 2 indicators 1 date (end) - peers only":
     st.pyplot(fig)    
         
 elif plot_type=="5. Bar stacked: 1 indicator (x) between 2 dates":
-    st.write("Under construction")    
+    st.write("Under construction")
+    
     
 elif plot_type=="6. Bar: 1 indicator (x) 1 date (end)":
-    st.write("Under construction")    
+    st.write("Under construction")
+    if all_peers == "All":
+        all_peers_keys = m_keys
+    else:
+        peers_key = "PP_"+all_peers
+        df = sovdb_read_gen(peers_key)        
+        all_peers_keys = df.m_key 
+        
+    #get broad peers
+    for key in all_peers_keys:
+        ticker_x = key+"_"+ticker_x0
+        is_x = ticker_exists(ticker_x)
+        
+        if is_x:             
+            df_x = sovdb_read(ticker_x, date_st)            
+                        
+            if ~df_x.empty:            
+                x_down = df_x[(df_x.index == date.strftime('%Y-%m-%d'))]                
+                
+                if x_down.size == 0:
+                    data_x.append(0)
+                else:
+                    data_x.append(x_down.values[0][0])
+                labels.append(key)
+
+                
+    if log_x:
+        data_x = np.log(data_x)    
+        suffix_x = ", log"
+        
+    br1 = np.arange(len(all_peers_keys))
+    
+    fig, ax = plt.subplots()
+    x_label = ticker_x0+": "+date.strftime('%Y-%m-%d')+suffix_x
+    
+    cols = ["Country", ticker_x0]    
+    df_f = pd.concat([pd.Series(labels,name=cols[0]), pd.Series(data_x,name=cols[1])],axis=1)       
+    df_f = df_f.sort_values(by=[ticker_x0], ascending=False).reset_index()
+   
+    ii = df_f[df_f.Country.isin(peers_s_keys)].index
+    ij = df_f[~df_f.Country.isin(peers_s_keys)].index
+    jj = df_f[df_f.Country==country_sel_key].index
+        
+    p1 = ax.bar(br1, df_f[ticker_x0],color=mymap[0])    
+    x_lab = df_f.Country.values    
+    x_lab[[ij.tolist()]]=""
+    
+    for i in ii:
+        p1[i].set_color(mymap[1])
+    p1[jj[0]].set_color('r') 
+    
+    plt.title(country_sel+" vs "+peers+" vs "+all_peers+": "+ticker_x0+", "+date.strftime('%Y-%m-%d'))
+    plt.xticks([r for r in range(len(all_peers_keys))], x_lab)    
+    ax.set_xticklabels(x_lab,fontsize=7, rotation=90) 
+    ax.xaxis.set_ticks_position('none') 
+    
+    Countr_val = df_f[df_f.Country==country_sel_key][ticker_x0].values[0] 
+    Countr_rank = jj[0]+1
+    Countr_str = str(round(Countr_val,1))+", rank #"+str(Countr_rank)
+    
+    ax.annotate(Countr_str, (jj[0], Countr_val),color = 'r',ha='left', va='bottom', size=8)  
+    
+    plt.show()     
+    st.pyplot(fig)
     
 cols=st.columns(3)
 with cols[0]:    
