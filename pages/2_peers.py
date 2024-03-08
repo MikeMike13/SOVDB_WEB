@@ -465,8 +465,7 @@ elif plot_type=="4. Bar: 2 indicators 1 date (end) - peers only":
             peers_indic_2.append(rows_x[0][1])
         else:
             peers_indic_2.append(0)
-    
-    
+       
     df_peers_data = pd.DataFrame(
                                     {ticker_x0: peers_indic_1,                                    
                                      ticker_y0: peers_indic_2
