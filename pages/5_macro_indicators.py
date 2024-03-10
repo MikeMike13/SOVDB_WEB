@@ -341,8 +341,7 @@ with cols[0]:
     rows = cur.fetchall()
     colnames = [desc[0] for desc in cur.description]
     ticker_sel = pd.DataFrame(rows,columns=colnames)
-    
-    
+        
     #cols=st.columns(1)
     
     st.dataframe(

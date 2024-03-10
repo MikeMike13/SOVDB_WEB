@@ -165,6 +165,7 @@ with cols[1]:
          macro_data = sovdb_read(ticker1_sel, short_date)
          macro_data = macro_data.rename(columns={"Value": ticker1})         
          df = macro_data[ticker1].to_frame()
+         df = df.sort_index()
          
          df_y = df.resample('Y').last()
          YTD_FX = (df_y.values[-1][0]/df_y.values[-2][0]-1)*100
