@@ -18,6 +18,7 @@ mymap = ['#0051CA', '#F8AC27', '#3F863F', '#C6DBA1', '#FDD65F', '#FBEEBD', '#507
 
 def sovdb_read(ticker, date):
     query = "SELECT * FROM sovdb_schema.\""+ticker+"\" WHERE \"""Date\""">='"+date.strftime('%Y-%m-%d')+"'"    
+    cur = conn.cursor()
     cur.execute(query);
     rows = cur.fetchall()
     colnames = [desc[0] for desc in cur.description]
@@ -26,28 +27,43 @@ def sovdb_read(ticker, date):
     df.index = pd.to_datetime(df.index)    
     return df
 
+def sovdb_read_date(ticker, date):
+    query = "SELECT * FROM sovdb_schema.\""+ticker+"\" WHERE \"""Date\"""='"+date.strftime('%Y-%m-%d')+"'"    
+    cur = conn.cursor()
+    cur.execute(query);
+    rows = cur.fetchall()
+    rows = np.array([*rows])   
+    return rows[0][1]
+
 def ticker_exists(ticker):
      query_s = "SELECT * FROM sovdb_schema.""macro_indicators"" WHERE ""ticker"" = '"+ticker+"'"    
+     cur = conn.cursor()
      cur.execute(query_s)
      rows = cur.fetchall()
      rows = np.array([*rows])
      return rows.size !=0
-     
-query = "SELECT * FROM sovdb_schema.countries"
-cur = conn.cursor()
-cur.execute(query);
-rows = cur.fetchall()
-colnames = [desc[0] for desc in cur.description]
-df = pd.DataFrame(rows,columns=colnames)
-count_sel = df.name
 
+def sovdb_read_gen(ticker):
+    selectquery = "SELECT * FROM sovdb_schema.\""+ticker+"\""
+    cur = conn.cursor()
+    cur.execute(selectquery);
+    rows = cur.fetchall()
+    colnames = [desc[0] for desc in cur.description]
+    df = pd.DataFrame(rows,columns=colnames)     
+    return df
+     
+df = sovdb_read_gen("countries")
+count_sel = df.name
 
 df = df.fillna('') 
 
 countr = st.selectbox("Country",(count_sel), index=203)
 
-#st.write(df[df.name==countr].type.values[0])
 key = df[df.name==countr].m_key.values[0]
+
+#get all peers
+df_p = sovdb_read_gen("peers")
+peers = df_p.p_key
 
 st.header('Description data')
 cols=st.columns(2)
@@ -102,6 +118,63 @@ with cols[3]:
         st.write("ISO3 key: none")
     else:
         st.write("ISO3 key: "+df[df.name==countr].iso3_key.values[0])
+
+st.header('Rankings')
+cols=st.columns(3) 
+with cols[0]:
+    date_rank = st.date_input("as of: ", pd.to_datetime('2022-12-31'))
+with cols[1]:
+    small_peers = st.selectbox("Peers",peers, index=0)
+with cols[2]:
+    calc_rank = st.checkbox('Calc rankings',0)    
+    
+if calc_rank:
+    ticker_r1 = 'LP_Y_WEO'
+    ticker_r10 = key+"_"+ticker_r1
+    ticker_c_val = sovdb_read_date(ticker_r10, date_rank)
+    #st.write(ticker_c_val)    
+    
+    peers_key = "PP_WEO"
+    df = sovdb_read_gen(peers_key)        
+    all_peers_keys = df.m_key 
+    
+    peers_key_sm = "PP_"+small_peers
+    df = sovdb_read_gen(peers_key_sm)        
+    small_peers_key = df.m_key 
+    
+    data_x = []    
+    #get broad peers
+    for key in all_peers_keys:
+        ticker_x = key+"_"+ticker_r1
+        is_x = ticker_exists(ticker_x)
+                      
+        if is_x:                                        
+            df_x = sovdb_read_date(ticker_x, date_rank) 
+            data_x.append(df_x)                   
+            
+    data_x = np.array(data_x)                
+    data_x = np.sort(data_x)[::-1] 
+                  
+    rank1_all = np.where(data_x == ticker_c_val)
+    rank1_all = rank1_all[0][0]+1
+    
+    data_x = [] 
+    for key in small_peers_key:
+        ticker_x = key+"_"+ticker_r1
+        is_x = ticker_exists(ticker_x)
+                      
+        if is_x:                                        
+            df_x = sovdb_read_date(ticker_x, date_rank) 
+            data_x.append(df_x)                   
+            
+    data_x = np.array(data_x)                
+    data_x = np.sort(data_x)[::-1] 
+                  
+    rank1_small = np.where(data_x == ticker_c_val)
+    rank1_small = rank1_small[0][0]+1
+    
+    st.write("Population: #"+str(rank1_all)+" (peers #"+str(rank1_small)+")")
+              
 
 st.header('Map')
         
