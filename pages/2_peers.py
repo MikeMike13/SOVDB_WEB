@@ -424,10 +424,8 @@ elif plot_type=="3. Plot: 1 indicator (x) between 2 dates - peers only":
     formatter = matplotlib.dates.DateFormatter('%Y')
     ax.xaxis.set_major_formatter(formatter)
     plt.show()     
-    st.pyplot(fig)
-    
-                
-                
+    st.pyplot(fig)    
+                                
 elif plot_type=="4. Bar: 2 indicators 1 date (end) - peers only":
     #st.write("Under construction")
     peers_tick = "PP_"+peers    
@@ -496,11 +494,50 @@ elif plot_type=="4. Bar: 2 indicators 1 date (end) - peers only":
     st.pyplot(fig)    
         
 elif plot_type=="5. Bar stacked: 1 indicator (x) between 2 dates":
-    st.write("Under construction")
+    fig, ax = plt.subplots()
+    i=1
+    for key in peers_s_keys:
     
+        ticker_x = key+"_"+ticker_x0
+        is_x = ticker_exists(ticker_x)
+        
+        if is_x:             
+            df_x = sovdb_read(ticker_x, date_st)                                    
+            if df_x.empty:                            
+                j=1
+            else:
+                df_x = df_x.rename(columns={"Value": key})                
+                if i==1:
+                    df_f = df_x
+                    i=i+1
+                else:
+                    df_f = pd.concat([df_f, df_x], axis=1, ignore_index=False, sort=True, )
+                    i=i+1
+   
+    df_f.index = df_f.index.strftime('%Y')     
+    #fig = df_f.plot.bar(stacked=True).figure
+    #fig = df_f.plot.bar(stacked=True)
+    ax = df_f.plot.bar(stacked=True)
     
-elif plot_type=="6. Bar: 1 indicator (x) 1 date (end)":
-    st.write("Under construction")
+    ax.axvline(x=datetime(date.today().year-1, 12, 31).year, color = mymap[0],linestyle='--')    
+    plt.title(indic_x_eng+": "+peers)    
+    #formatter = matplotlib.dates.DateFormatter('%Y')
+    #ax.xaxis.set_major_formatter(formatter)
+    plt.show()     
+    st.pyplot(plt) 
+    #st.pyplot(df_f.plot.bar(stacked=True).figure)       
+    
+elif plot_type=="6. Bar: 1 indicator (x) 1 date (end)":    
+    cols=st.columns(4)
+    with cols[0]: 
+        lim_x = st.checkbox('limit x:',0) 
+    with cols[1]: 
+        x_shift = st.number_input('to +/-',3)
+    with cols[2]: 
+        y_min = st.number_input('y min',value=-1000000000)
+    with cols[3]: 
+        y_max = st.number_input('y max',value=1000000000)
+        
     if all_peers == "All":
         all_peers_keys = m_keys
     else:
@@ -535,32 +572,66 @@ elif plot_type=="6. Bar: 1 indicator (x) 1 date (end)":
     fig, ax = plt.subplots()
     x_label = ticker_x0+": "+date.strftime('%Y-%m-%d')+suffix_x
     
-    cols = ["Country", ticker_x0]    
-    df_f = pd.concat([pd.Series(labels,name=cols[0]), pd.Series(data_x,name=cols[1])],axis=1)       
-    df_f = df_f.sort_values(by=[ticker_x0], ascending=False).reset_index()
-   
+    cols = ["Country", ticker_x0]        
+    df_f = pd.concat([pd.Series(labels,name=cols[0]), pd.Series(data_x,name=cols[1])],axis=1)           
+    df_f = df_f.sort_values(by=[ticker_x0], ascending=False).reset_index(drop=True)
+        
     ii = df_f[df_f.Country.isin(peers_s_keys)].index
     ij = df_f[~df_f.Country.isin(peers_s_keys)].index
-    jj = df_f[df_f.Country==country_sel_key].index
-        
+    jj = df_f[df_f.Country==country_sel_key].index    
+    
     p1 = ax.bar(br1, df_f[ticker_x0],color=mymap[0])    
-    x_lab = df_f.Country.values    
-    x_lab[[ij.tolist()]]=""
+    df_f_p = df_f.copy()
+    df_f_p.loc[~df_f_p['Country'].isin(peers_s_keys) ,'Country'] = ''
+    df_f_p.loc[~df_f_p['Country'].isin(peers_s_keys) ,ticker_x0] = 0
+    x_lab_p = df_f_p['Country'].values
+        
+    df_f_c = df_f.copy()    
+    df_f_c.loc[df_f_c['Country'] != country_sel_key ,'Country'] = ''
+    df_f_c.loc[df_f_c['Country'] != country_sel_key ,ticker_x0] = 0
+    x_lab_c = df_f_c['Country'].values
+        
+    x_lab = []    
+    if country_sel_key in peers_s_keys.values: 
+        x_lab = x_lab_p
+    else:
+        for i in range(len(all_peers_keys)):
+            x_lab.append(x_lab_p[i]+x_lab_c[i])
     
     for i in ii:
         p1[i].set_color(mymap[1])
     p1[jj[0]].set_color('r') 
     
     plt.title(country_sel+" vs "+peers+" vs "+all_peers+": "+ticker_x0+", "+date.strftime('%Y-%m-%d'))
-    plt.xticks([r for r in range(len(all_peers_keys))], x_lab)    
+    plt.xticks([r for r in range(len(all_peers_keys))], x_lab)       
     ax.set_xticklabels(x_lab,fontsize=7, rotation=90) 
     ax.xaxis.set_ticks_position('none') 
-    
+        
     Countr_val = df_f[df_f.Country==country_sel_key][ticker_x0].values[0] 
     Countr_rank = jj[0]+1
-    Countr_str = str(round(Countr_val,1))+", rank #"+str(Countr_rank)
+    Tot_countr = len(all_peers_keys)
+    Countr_str = str(round(Countr_val,1))+", rank #"+str(Countr_rank) +"/"+str(Tot_countr)
+    if lim_x:
+        ax.set_xticklabels(df_f['Country'].values,fontsize=10, rotation=90)
+        x_left = Countr_rank-1-(x_shift+0.5)
+        x_right = Countr_rank-1+(x_shift+0.5)
+        if(x_left<0):
+            x_left=0
+        if(x_right>len(all_peers_keys)):
+            x_right = len(all_peers_keys)
+        
+        plt.xlim((x_left, x_right))
+        ymin, ymax = plt.ylim()
+        plt.ylim((max(y_min, ymin), min(y_max, ymax)))
+        jjj=0
+        for tick in df_f[ticker_x0]:                        
+            if jjj != jj[0]:
+                ax.annotate(str(round(tick,1)), (jjj, tick),color = mymap[0],ha='center', va='bottom', size=8, rotation=90)  
+            jjj=jjj+1
+        ax.annotate(Countr_str, (jj[0], Countr_val),color = 'r',ha='center', va='bottom', size=8, rotation=90)  
+    else:    
+        ax.annotate(Countr_str, (jj[0], Countr_val),color = 'r',ha='center', va='bottom', size=8)  
     
-    ax.annotate(Countr_str, (jj[0], Countr_val),color = 'r',ha='left', va='bottom', size=8)  
     
     plt.show()     
     st.pyplot(fig)
@@ -601,5 +672,4 @@ with cols[2]:
                 data=img,
                 file_name=fn,
                 mime="image/png"
-            )
-            
+            )          
