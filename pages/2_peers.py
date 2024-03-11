@@ -33,6 +33,17 @@ def sovdb_read(ticker, date):
     df.index = pd.to_datetime(df.index)    
     return df
     
+def sovdb_read_date(ticker, date):
+    query = "SELECT * FROM sovdb_schema.\""+ticker+"\" WHERE \"""Date\"""='"+date.strftime('%Y-%m-%d')+"'"    
+    cur = conn.cursor()
+    cur.execute(query);
+    rows = cur.fetchall()
+    rows = np.array([*rows])   
+    if rows.size ==0:
+        return 0
+    else:
+        return rows[0][1]
+    
 def sovdb_read_gen(ticker):
     selectquery = "SELECT * FROM sovdb_schema.\""+ticker+"\""
     cur = conn.cursor()
@@ -672,4 +683,46 @@ with cols[2]:
                 data=img,
                 file_name=fn,
                 mime="image/png"
-            )          
+            )     
+            
+st.subheader('Peers table') 
+cols=st.columns(2)
+with cols[0]:
+    peers_t = st.checkbox('generate',0)
+with cols[1]:
+    peers_d = st.date_input("as of: ", pd.to_datetime('2022-12-31'))
+
+if peers_t:
+    peers_sm_key = "PP_"+peers
+    df = sovdb_read_gen(peers_sm_key)
+    peers_s_keys = df.m_key  
+    df_p = pd.DataFrame(peers_s_keys.values)
+    
+    indics = ["GDP, bln USD","Popul, mln"]
+                        
+    p_tick1 = 'NGDPD_Y_WEO'    
+    tick1_data = []
+    p_tick2 = 'LP_Y_WEO'
+    tick2_data = []
+    for peer in peers_s_keys:        
+        temp = sovdb_read_date(peer+"_"+p_tick1, peers_d)
+        tick1_data.append(round(temp,1))
+        
+        temp = sovdb_read_date(peer+"_"+p_tick2, peers_d)
+        tick2_data.append(round(temp,1))
+        
+    
+    df_p = pd.DataFrame({indics[0]: tick1_data,indics[1]: tick2_data},index=peers_s_keys)
+    df_f = df_p.transpose()
+    st.write(df_f)
+
+buffer = io.BytesIO()
+with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:    
+    df_f.to_excel(writer, sheet_name='Sheet1', index=True)    
+download2 = st.download_button(
+    label="Excel",
+    data=buffer,
+    file_name="PEERS-"+peers+".xlsx",
+    mime='application/vnd.ms-excel'
+)
+            

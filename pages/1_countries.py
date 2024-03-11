@@ -33,7 +33,10 @@ def sovdb_read_date(ticker, date):
     cur.execute(query);
     rows = cur.fetchall()
     rows = np.array([*rows])   
-    return rows[0][1]
+    if rows.size ==0:
+        return 0
+    else:
+        return rows[0][1]
 
 def ticker_exists(ticker):
      query_s = "SELECT * FROM sovdb_schema.""macro_indicators"" WHERE ""ticker"" = '"+ticker+"'"    
@@ -52,84 +55,9 @@ def sovdb_read_gen(ticker):
     df = pd.DataFrame(rows,columns=colnames)     
     return df
      
-df = sovdb_read_gen("countries")
-count_sel = df.name
-
-df = df.fillna('') 
-
-countr = st.selectbox("Country",(count_sel), index=203)
-
-key = df[df.name==countr].m_key.values[0]
-
-#get all peers
-df_p = sovdb_read_gen("peers")
-peers = df_p.p_key
-
-st.header('Description data')
-cols=st.columns(2)
-with cols[0]:
-    if (len(df[df.name==countr].type.values[0])==0):
-        st.write("Type: none")
-    else:
-        st.write("Type: "+df[df.name==countr].type.values[0])
-with cols[1]:
-    if (len(df[df.name==countr].fx.values[0])==0):
-        st.write("Currency: none")
-    else:
-        st.write("Currency: "+df[df.name==countr].fx.values[0])    
+def get_rank(ticker_r1,key, date_rank,small_peers):
     
-cols=st.columns(4)
-with cols[0]:
-    st.write("Master key (M_KEY): "+df[df.name==countr].m_key.values[0])
-with cols[1]:
-    if (len(df[df.name==countr].imf_key.values[0])==0):
-        st.write("IMF key: none")
-    else:
-        st.write("IMF key: "+df[df.name==countr].imf_key.values[0])
-with cols[2]:
-    if (len(df[df.name==countr].wb_key.values[0])==0):
-        st.write("WB key: none")
-    else:
-        st.write("WB key: "+df[df.name==countr].wb_key.values[0])      
-with cols[3]:    
-    if (len(df[df.name==countr].ecb_key.values[0])==0):
-        st.write("ECB key: none")
-    else:
-        st.write("ECB key: "+df[df.name==countr].ecb_key.values[0])
-
-cols=st.columns(4)
-with cols[0]:
-    if (len(df[df.name==countr].oecd_key.values[0])==0):
-        st.write("OECD key: none")
-    else:
-        st.write("OECD key: "+df[df.name==countr].oecd_key.values[0])
-with cols[1]:
-    if (len(df[df.name==countr].bis_key.values[0])==0):
-        st.write("BIS key: none")
-    else:
-        st.write("BIS key: "+df[df.name==countr].bis_key.values[0])
-with cols[2]:
-    if (len(df[df.name==countr].iso2_key.values[0])==0):
-        st.write("ISO2 key: none")
-    else:
-        st.write("ISO2 key: "+df[df.name==countr].iso2_key.values[0])      
-with cols[3]:    
-    if (len(df[df.name==countr].iso3_key.values[0])==0):
-        st.write("ISO3 key: none")
-    else:
-        st.write("ISO3 key: "+df[df.name==countr].iso3_key.values[0])
-
-st.header('Rankings')
-cols=st.columns(3) 
-with cols[0]:
-    date_rank = st.date_input("as of: ", pd.to_datetime('2022-12-31'))
-with cols[1]:
-    small_peers = st.selectbox("Peers",peers, index=0)
-with cols[2]:
-    calc_rank = st.checkbox('Calc rankings',0)    
-    
-if calc_rank:
-    ticker_r1 = 'LP_Y_WEO'
+    #ticker_r1 = 'LP_Y_WEO'
     ticker_r10 = key+"_"+ticker_r1
     ticker_c_val = sovdb_read_date(ticker_r10, date_rank)
     #st.write(ticker_c_val)    
@@ -148,7 +76,8 @@ if calc_rank:
         ticker_x = key+"_"+ticker_r1
         is_x = ticker_exists(ticker_x)
                       
-        if is_x:                                        
+        if is_x:                       
+            #st.write(ticker_x)                 
             df_x = sovdb_read_date(ticker_x, date_rank) 
             data_x.append(df_x)                   
             
@@ -173,9 +102,181 @@ if calc_rank:
     rank1_small = np.where(data_x == ticker_c_val)
     rank1_small = rank1_small[0][0]+1
     
-    st.write("Population: #"+str(rank1_all)+" (peers #"+str(rank1_small)+")")
-              
+    return ticker_c_val, rank1_all, rank1_small, len(all_peers_keys), len(small_peers_key)
 
+
+#read all countries des
+df_all = sovdb_read_gen("countries")
+count_sel = df_all.name
+df_all = df_all.fillna('') 
+
+countr = st.selectbox("Country",(count_sel), index=203)
+key = df_all[df_all.name==countr].m_key.values[0]
+
+#get all peers
+df_p = sovdb_read_gen("peers")
+peers = df_p.p_key
+
+st.header('Description data')
+cols=st.columns(4)
+with cols[0]:
+    if (len(df_all[df_all.name==countr].name.values[0])==0):
+        st.write("Name: none")
+    else:
+        st.write("Name: "+df_all[df_all.name==countr].name.values[0])
+with cols[1]:
+    if (len(df_all[df_all.name==countr].pol_type.values[0])==0):
+        st.write("Political system: none")
+    else:
+        st.write("Political system: "+df_all[df_all.name==countr].pol_type.values[0])
+with cols[2]:
+    if (len(df_all[df_all.name==countr].president.values[0])==0):
+        st.write("President: none")
+    else:
+        st.write("President: "+df_all[df_all.name==countr].president.values[0])
+with cols[3]:
+    if (len(df_all[df_all.name==countr].type.values[0])==0):
+        st.write("Type: none")
+    else:
+        st.write("Type: "+df_all[df_all.name==countr].type.values[0])
+
+cols=st.columns(4)
+with cols[0]:
+    if (len(df_all[df_all.name==countr].fx.values[0])==0):
+        st.write("Currency: none")
+    else:
+        st.write("Currency: "+df_all[df_all.name==countr].fx.values[0])    
+with cols[1]:
+    if (len(df_all[df_all.name==countr].ara_type.values[0])==0):
+        st.write("IMF FX type: none")
+    else:
+        st.write("IMF FX type: "+df_all[df_all.name==countr].ara_type.values[0])    
+with cols[2]:
+    if (len(df_all[df_all.name==countr].ara_cat.values[0])==0):
+        st.write("IMF FX category: none")
+    else:
+        st.write("IMF FX category: "+df_all[df_all.name==countr].ara_cat.values[0])          
+        
+cols=st.columns(4)
+with cols[0]:
+    if (len(df_all[df_all.name==countr].moodys.values[0])==0):
+        st.write("Moody's': none")
+    else:
+        st.write("Moody's: "+df_all[df_all.name==countr].moodys.values[0])    
+with cols[1]:
+    if (len(df_all[df_all.name==countr].snp.values[0])==0):
+        st.write("S&P: none")
+    else:
+        st.write("S&P: "+df_all[df_all.name==countr].snp.values[0])    
+with cols[2]:
+    if (len(df_all[df_all.name==countr].fitch.values[0])==0):
+        st.write("Fitch: none")
+    else:
+        st.write("Fitch: "+df_all[df_all.name==countr].fitch.values[0])    
+
+cols=st.columns(7)
+with cols[0]:
+    if (len(df_all[df_all.name==countr].mof_page.values[0])==0):
+        st.write("MoF: none")
+    else:      
+        st.write("MoF: [link]("+df_all[df_all.name==countr].mof_page.values[0]+")")
+with cols[1]:
+    if (len(df_all[df_all.name==countr].cbr_page.values[0])==0):
+        st.write("CBR: none")
+    else:      
+        st.write("CBR: [link]("+df_all[df_all.name==countr].cbr_page.values[0]+")")
+with cols[2]:
+    if (len(df_all[df_all.name==countr].stat_page.values[0])==0):
+        st.write("Nat stat: none")
+    else:      
+        st.write("Nat stat: [link]("+df_all[df_all.name==countr].stat_page.values[0]+")")
+with cols[3]:
+    if (len(df_all[df_all.name==countr].oth1_page.values[0])==0):
+        st.write("Other: none")
+    else:      
+        st.write("Other: [link]("+df_all[df_all.name==countr].oth1_page.values[0]+")")
+
+#cols=st.columns(4)
+with cols[4]:
+    if (len(df_all[df_all.name==countr].imf_page.values[0])==0):
+        st.write("IMF: none")
+    else:      
+        st.write("IMF: [link]("+df_all[df_all.name==countr].imf_page.values[0]+")")
+with cols[5]:
+    if (len(df_all[df_all.name==countr].wb_page.values[0])==0):
+        st.write("WB: none")
+    else:      
+        st.write("WB: [link]("+df_all[df_all.name==countr].wb_page.values[0]+")")
+with cols[6]:
+    if (len(df_all[df_all.name==countr].ebrd_page.values[0])==0):
+        st.write("EBRD: none")
+    else:      
+        st.write("EBRD: [link]("+df_all[df_all.name==countr].ebrd_page.values[0]+")")
+
+        
+cols=st.columns(8)
+with cols[0]:
+    st.write("Master key: "+df_all[df_all.name==countr].m_key.values[0])
+with cols[1]:
+    if (len(df_all[df_all.name==countr].imf_key.values[0])==0):
+        st.write("IMF key: none")
+    else:
+        st.write("IMF key: "+df_all[df_all.name==countr].imf_key.values[0])
+with cols[2]:
+    if (len(df_all[df_all.name==countr].wb_key.values[0])==0):
+        st.write("WB key: none")
+    else:
+        st.write("WB key: "+df_all[df_all.name==countr].wb_key.values[0])      
+with cols[3]:    
+    if (len(df_all[df_all.name==countr].ecb_key.values[0])==0):
+        st.write("ECB key: none")
+    else:
+        st.write("ECB key: "+df_all[df_all.name==countr].ecb_key.values[0])
+
+#cols=st.columns(4)
+with cols[4]:
+    if (len(df_all[df_all.name==countr].oecd_key.values[0])==0):
+        st.write("OECD key: none")
+    else:
+        st.write("OECD key: "+df_all[df_all.name==countr].oecd_key.values[0])
+with cols[5]:
+    if (len(df_all[df_all.name==countr].bis_key.values[0])==0):
+        st.write("BIS key: none")
+    else:
+        st.write("BIS key: "+df_all[df_all.name==countr].bis_key.values[0])
+with cols[6]:
+    if (len(df_all[df_all.name==countr].iso2_key.values[0])==0):
+        st.write("ISO2 key: none")
+    else:
+        st.write("ISO2 key: "+df_all[df_all.name==countr].iso2_key.values[0])      
+with cols[7]:    
+    if (len(df_all[df_all.name==countr].iso3_key.values[0])==0):
+        st.write("ISO3 key: none")
+    else:
+        st.write("ISO3 key: "+df_all[df_all.name==countr].iso3_key.values[0])
+
+st.header('Rankings')
+cols=st.columns(3) 
+with cols[0]:
+    date_rank = st.date_input("as of: ", pd.to_datetime('2022-12-31'))
+with cols[1]:
+    small_peers = st.selectbox("Peers",peers, index=0)
+with cols[2]:
+    calc_rank = st.checkbox('Calc rankings',0)    
+    
+if calc_rank:
+    ticker_r0 = 'NGDPD_Y_WEO'
+    last0, rank0_all, rank0_small, l_n, s_n = get_rank(ticker_r0, key, date_rank, small_peers)    
+    st.write("GDP: "+str(round(last0,1))+" bln USD, #"+str(rank0_all)+"/"+str(l_n)+" (peers #"+str(rank0_small)+"/"+str(s_n)+")")
+    
+    ticker_r1 = 'LP_Y_WEO'
+    last1, rank1_all, rank1_small, l_n, s_n = get_rank(ticker_r1, key, date_rank, small_peers)    
+    st.write("Population: "+str(round(last1,1))+" mln, #"+str(rank1_all)+"/"+str(l_n)+" (peers #"+str(rank1_small)+"/"+str(s_n)+")")
+
+    ticker_r2 = 'NGDPDPC_Y_WEO'
+    last2, rank2_all, rank2_small, l_n, s_n = get_rank(ticker_r2, key, date_rank, small_peers)    
+    st.write("GDP per Capita: "+str(round(last2,1))+" USD, #"+str(rank2_all)+"/"+str(l_n)+" (peers #"+str(rank2_small)+"/"+str(s_n)+")")
+    
 st.header('Map')
         
 st.header('Key charts')
