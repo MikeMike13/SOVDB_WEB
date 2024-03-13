@@ -857,11 +857,6 @@ if peers_t:
     st.dataframe(
         df_f,
         hide_index=False,
-        #column_config={
-        #    #"col0": None,
-        #    #"col0": st.column_config.TextColumn(label="field"),
-        #    "col0": st.column_config.TextColumn(label="Value", width="large"),        
-        #},
         width=700,
         height=950,
     )
