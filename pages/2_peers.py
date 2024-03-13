@@ -698,23 +698,174 @@ if peers_t:
     peers_s_keys = df.m_key  
     df_p = pd.DataFrame(peers_s_keys.values)
     
-    indics = ["GDP, bln USD","Popul, mln"]
+    indics = ["GDP, bln USD","Popul, mln","GDP per Capita, 000 USD","GDP growth","- 10Y avg","CPI, avg","- 10Y av",\
+              "GG rev","GG exp","- interest","GG bal","- 5Y avg","- pbal","GG debt","GG debt / REV","Int / REV",\
+              "CA", "- 5Y avg.","Reserves", "Ext Debt", "Reserves, USD","Ext Debt, USD","Res / ExtD, %"]
                         
     p_tick1 = 'NGDPD_Y_WEO'    
     tick1_data = []
     p_tick2 = 'LP_Y_WEO'
     tick2_data = []
+    p_tick3 = 'NGDPDPC_Y_WEO'
+    tick3_data = []
+    p_tick4 = 'NGDP_RPCH_Y_WEO'
+    tick4_data = []
+    tick4a_data = []
+    p_tick5 = 'PCPIPCH_Y_WEO'
+    tick5_data = []
+    tick5a_data = []
+    
+    p_tick6 = 'GGR_NGDP_Y_WEO'
+    tick6_data = []
+    p_tick7 = 'GGX_NGDP_Y_WEO'
+    tick7_data = []
+    p_tick8 = 'GGXCNL_NGDP_Y_WEO'
+    tick8_data = []
+    tick8a_data = []
+    p_tick9 = 'GGXONLB_NGDP_Y_WEO'
+    tick9_data = []    
+    p_tick10 = 'GGXWDG_NGDP_Y_WEO'
+    tick10_data = []
+    tick10a_data = []
+    
+    tick11_data = []
+    tick11a_data = []
+
+    p_tick12 = 'BCA_NGDPD_Y_WEO'
+    tick12_data = []
+    tick12a_data = []
+    
+    p_tick13 = 'DDNIIPRESGDP_Y_CUST' #Reserves, %GDP
+    tick13_data = []
+    tick13a_data = []    
+    
+    p_tick14 = 'DDEXTDUSD_Y_WB' #External Debt, USD
+    tick14_data = []
+    tick14a_data = []
+    tick14b_data = []
+    
+    years_shift = 10
+    peers_d_p = datetime(peers_d.year-years_shift, peers_d.month, peers_d.day)    
+    
+    years_shift2 = 5
+    peers_d_p2 = datetime(peers_d.year-years_shift2, peers_d.month, peers_d.day)    
+    
+    empty_strs = ["" for x in range(peers_s_keys.shape[0])]
+    
     for peer in peers_s_keys:        
-        temp = sovdb_read_date(peer+"_"+p_tick1, peers_d)
-        tick1_data.append(round(temp,1))
+        #GDP USD
+        temp1 = sovdb_read_date(peer+"_"+p_tick1, peers_d)
+        tick1_data.append(round(temp1,1))
         
+        #Population
         temp = sovdb_read_date(peer+"_"+p_tick2, peers_d)
         tick2_data.append(round(temp,1))
         
+        #GDP per Capita USD
+        temp = sovdb_read_date(peer+"_"+p_tick3, peers_d)
+        tick3_data.append(round(temp/1000,1))
+        
+        temp = sovdb_read_date(peer+"_"+p_tick4, peers_d)
+        tick4_data.append(round(temp,1))
+        
+        temp = sovdb_read(peer+"_"+p_tick4, peers_d_p)
+        tick4a_data.append(round(temp.values[1:1+years_shift].mean(),1))
+        
+        temp = sovdb_read_date(peer+"_"+p_tick5, peers_d)
+        tick5_data.append(round(temp,1))
+        
+        temp = sovdb_read(peer+"_"+p_tick5, peers_d_p)
+        tick5a_data.append(round(temp.values[1:1+years_shift].mean(),1))
+        
+        #fiscal
+        #revenue
+        temp6 = sovdb_read_date(peer+"_"+p_tick6, peers_d)
+        tick6_data.append(round(temp6,1))
+        
+        #expenditures
+        temp = sovdb_read_date(peer+"_"+p_tick7, peers_d)
+        tick7_data.append(round(temp,1))
+        
+        #balance
+        temp8 = sovdb_read_date(peer+"_"+p_tick8, peers_d)
+        tick8_data.append(round(temp8,1))
+        
+        temp = sovdb_read(peer+"_"+p_tick8, peers_d_p2)
+        tick8a_data.append(round(temp.values[1:1+years_shift2].mean(),1))
+        
+        #primary balance
+        temp9 = sovdb_read_date(peer+"_"+p_tick9, peers_d)
+        tick9_data.append(round(temp9,1))
+        
+        #debt
+        temp10 = sovdb_read_date(peer+"_"+p_tick10, peers_d)
+        tick10_data.append(round(temp10,1))
+        
+        #debt to revenues        
+        temp = temp10/temp6*100
+        tick10a_data.append(round(temp,1))
+        
+        #interest
+        temp11 = temp9-temp8
+        tick11_data.append(round(temp11,1))
+        
+        #int to revenues        
+        temp = temp11/temp6*100
+        tick11a_data.append(round(temp,1))
     
-    df_p = pd.DataFrame({indics[0]: tick1_data,indics[1]: tick2_data},index=peers_s_keys)
+        #External
+        #CA
+        temp12 = sovdb_read_date(peer+"_"+p_tick12, peers_d)
+        tick12_data.append(round(temp12,1))
+        
+        temp = sovdb_read(peer+"_"+p_tick12, peers_d_p2)
+        tick12a_data.append(round(temp.values[1:1+years_shift2].mean(),1))
+        
+        #Reserves %GDP
+        temp13 = sovdb_read_date(peer+"_"+p_tick13, peers_d)
+        tick13_data.append(round(temp13,1))
+        
+        #Reserves, USD
+        temp13a = temp13*temp1/100
+        tick13a_data.append(round(temp13a,1))
+        
+        #External Debt, USD
+        temp14 = sovdb_read_date(peer+"_"+p_tick14, peers_d)
+        tick14_data.append(round(temp14/1000000000,1))
+        
+        #External Debt, %GDP
+        temp = (temp14/1000000000)/temp1*100
+        tick14a_data.append(round(temp,1))
+        
+        #Reserves / External Debt
+        if temp14==0:
+            tick14b_data.append(0)
+        else:
+            temp = temp13a/(temp14/1000000000)*100
+            tick14b_data.append(round(temp,1))
+        
+    df_p = pd.DataFrame({'MACRO': empty_strs, indics[0]: tick1_data,indics[1]: tick2_data,indics[2]: tick3_data,\
+                         indics[3]: tick4_data,indics[4]: tick4a_data, indics[5]: tick5_data, indics[6]: tick5a_data,\
+                         'FISCAL, %GDP UNO': empty_strs, indics[7]: tick6_data,  indics[8]: tick7_data, indics[9]: tick11_data, indics[10]: tick8_data, indics[11]: tick8a_data, indics[12]: tick9_data,\
+                         indics[13]: tick10_data, indics[14]: tick10a_data, indics[15]: tick11a_data,\
+                         'EXTERNAL, %GDP UNO': empty_strs, indics[16]: tick12_data, indics[17]: tick12a_data, indics[18]: tick13_data, indics[19]: tick14a_data, indics[20]: tick13a_data, indics[21]: tick14_data, indics[22]: tick14b_data\
+                             },index=peers_s_keys)
+    
+    df_p = df_p.sort_values(by=[indics[0]], ascending=False)#.reset_index(drop=True)
     df_f = df_p.transpose()
-    st.write(df_f)
+    #st.write(df_f)
+    st.dataframe(
+        df_f,
+        hide_index=False,
+        #column_config={
+        #    #"col0": None,
+        #    #"col0": st.column_config.TextColumn(label="field"),
+        #    "col0": st.column_config.TextColumn(label="Value", width="large"),        
+        #},
+        width=700,
+        height=950,
+    )
+    
 
 buffer = io.BytesIO()
 with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:    
