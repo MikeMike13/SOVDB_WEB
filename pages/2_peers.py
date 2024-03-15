@@ -700,7 +700,8 @@ if peers_t:
     
     indics = ["GDP, bln USD","Popul, mln","GDP per Capita, 000 USD","GDP growth","- 10Y avg","CPI, avg","- 10Y av",\
               "GG rev","GG exp","- interest","GG bal","- 5Y avg","- pbal","GG debt","GG debt / REV","Int / REV",\
-              "CA", "- 5Y avg.","Reserves", "Ext Debt", "Reserves, USD","Ext Debt, USD","Res / ExtD, %"]
+              "CA", "- 5Y avg.","Reserves", "Ext Debt", "Reserves, USD","Ext Debt, USD","Res / ExtD, %",\
+              "Banks' assets","Credit growth, %","Tier1/RWA","NPL/Gross loans","ROA, %","ROE, %"]
                         
     p_tick1 = 'NGDPD_Y_WEO'    
     tick1_data = []
@@ -743,6 +744,31 @@ if peers_t:
     tick14_data = []
     tick14a_data = []
     tick14b_data = []
+    
+    #MONEY
+    #banks assets    
+    p_tick15 = 'DDASSETSTOTBANKSGDP_Y_CUST'
+    tick15_data = []
+    
+    #credit to private
+    p_tick16 = 'DDCREDTOPRIV_Y_CUST'
+    tick16_data = []
+    
+    #Tier1/RWA
+    p_tick17 = 'DDT1RWA_Y_CUST'
+    tick17_data = []
+    
+    #NPLs/Gross loans
+    p_tick18 = 'DDNPLGL_Y_CUST'
+    tick18_data = []
+    
+    #ROA
+    p_tick19 = 'DDROA_Y_CUST'
+    tick19_data = []
+    
+    #ROE
+    p_tick20 = 'DDROE_Y_CUST'
+    tick20_data = []
     
     years_shift = 10
     peers_d_p = datetime(peers_d.year-years_shift, peers_d.month, peers_d.day)    
@@ -843,13 +869,61 @@ if peers_t:
         else:
             temp = temp13a/(temp14/1000000000)*100
             tick14b_data.append(round(temp,1))
+
+        #Banks, assets
+        temp15 = sovdb_read_date(peer+"_"+p_tick15, peers_d)
+        if temp15==0:
+            tick15_data.append(0)
+        else:
+            tick15_data.append(round(temp15,1))
         
+        #!!!!!!!!
+        #Credit growth to private
+        temp16 = sovdb_read_date(peer+"_"+p_tick16, peers_d)
+        if temp16==0:
+            tick16_data.append(0)
+        else:
+            tick16_data.append(0)
+            #tick16_data.append(round(temp16,1))
+                    
+        #Tier1 RWA
+        temp17 = sovdb_read_date(peer+"_"+p_tick17, peers_d)
+        if temp17==0:
+            tick17_data.append(0)
+        else:            
+            tick17_data.append(round(temp17,1))
+            
+        #NPLs / Gross loans
+        temp18 = sovdb_read_date(peer+"_"+p_tick18, peers_d)
+        if temp18==0:
+            tick18_data.append(0)
+        else:            
+            tick18_data.append(round(temp18,1))
+
+        #!!!!!!!!
+        #ROA
+        temp19 = sovdb_read_date(peer+"_"+p_tick19, peers_d)
+        if temp19==0:
+            tick19_data.append(0)
+        else:          
+            tick19_data.append(0)
+            #tick19_data.append(round(temp19,1))
+            
+       #!!!!!!!!            
+        #ROE
+        temp20 = sovdb_read_date(peer+"_"+p_tick20, peers_d)
+        if temp20==0:
+            tick20_data.append(0)
+        else:            
+            tick20_data.append(0)
+#            tick20_data.append(round(temp20,1))
+            
     df_p = pd.DataFrame({'MACRO': empty_strs, indics[0]: tick1_data,indics[1]: tick2_data,indics[2]: tick3_data,\
                          indics[3]: tick4_data,indics[4]: tick4a_data, indics[5]: tick5_data, indics[6]: tick5a_data,\
                          'FISCAL, %GDP UNO': empty_strs, indics[7]: tick6_data,  indics[8]: tick7_data, indics[9]: tick11_data, indics[10]: tick8_data, indics[11]: tick8a_data, indics[12]: tick9_data,\
                          indics[13]: tick10_data, indics[14]: tick10a_data, indics[15]: tick11a_data,\
-                         'EXTERNAL, %GDP UNO': empty_strs, indics[16]: tick12_data, indics[17]: tick12a_data, indics[18]: tick13_data, indics[19]: tick14a_data, indics[20]: tick13a_data, indics[21]: tick14_data, indics[22]: tick14b_data\
-                             },index=peers_s_keys)
+                         'EXTERNAL, %GDP UNO': empty_strs, indics[16]: tick12_data, indics[17]: tick12a_data, indics[18]: tick13_data, indics[19]: tick14a_data, indics[20]: tick13a_data, indics[21]: tick14_data, indics[22]: tick14b_data,\
+                         'MONEY, %GDP UNO': empty_strs, indics[23]: tick15_data, indics[24]: tick16_data, indics[25]: tick17_data, indics[26]: tick18_data, indics[27]: tick19_data, indics[28]: tick20_data}, index=peers_s_keys)
     
     df_p = df_p.sort_values(by=[indics[0]], ascending=False)#.reset_index(drop=True)
     df_f = df_p.transpose()
@@ -858,7 +932,7 @@ if peers_t:
         df_f,
         hide_index=False,
         width=700,
-        height=950,
+        height=1200,
     )
     
 
