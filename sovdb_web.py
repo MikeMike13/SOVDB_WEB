@@ -52,7 +52,7 @@ st.set_page_config(
     page_icon="👋",
 )
 
-st.sidebar.success("Select a demo above.")
+#st.sidebar.success("Select a demo above.")
 
 cols=st.columns(4)
 with cols[0]:
@@ -60,12 +60,16 @@ with cols[0]:
 with cols[1]:
     st.write("Countries shorts: [link](https://docs.google.com/spreadsheets/d/1G1nJ0Nyp9nkj5znIAx0dcB3-nZsiXiyPDAvqMZvrC9E/edit?usp=sharing)")
 
+
+st.subheader('1. Set time period')    
+
 cols=st.columns(2)
 with cols[0]:
     Start_date = st.date_input("Start: ", datetime.date(2022, 1, 1))
 with cols[1]:    
     End_date = st.date_input("End: ", date.today())
-    
+
+st.subheader('2. 1st indicator')    
 cols=st.columns(2)
 with cols[0]:    
     ticker = st.text_input('Ticker', 'FX_RUBUSD_CBR')
@@ -88,12 +92,7 @@ with cols[5]:
 with cols[6]:    
     y_level = st.number_input('level')    
 
-
     
-    
-#BOND_SU26219RMFS4_MOEX_TQOB
-#STOCK_AFLT_MOEX_TQBR
-
 query = "SELECT * FROM sovdb_schema.\""+ticker+"\"";
 cur = conn.cursor()
 cur.execute(query);
@@ -166,7 +165,9 @@ elif func=="std":
 elif func=="cmlt":
     df = (1 + df/100).cumprod() - 1
 
+st.subheader('3. 2st indicator')
 
+st.subheader('4. Calc returns')
 #period change
 cols=st.columns(4)
 Start_val = 0
@@ -247,6 +248,7 @@ def click_button_del(DELETE, Delete_date):
     st.warning("DELETED: "+ticker+": "+Delete_date.strftime('%d-%b-%Y'))
     st.session_state.clicked = True
 
+st.subheader('Edit 1st indicator')
 ### - 22 - 92.4387     21 '92.349
 #Edit data
 cols=st.columns(4)
@@ -356,6 +358,7 @@ for i in range(0,len(groups)-1):
 tot_str = tot_str[:-2]
 tot_str = tot_str+")"
     
+st.subheader('5. Find indicator')
 cols=st.columns(2)
 with cols[0]:
     countr = st.selectbox("Country",(count_sel), index=203)
