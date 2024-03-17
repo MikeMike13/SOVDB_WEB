@@ -256,20 +256,14 @@ with cols[7]:
         st.write("ISO3 key: "+df_all[df_all.name==countr].iso3_key.values[0])
 
 
-#if (len(df_all[df_all.name==countr].iso2_key.values[0])==0):
-#    st.write("ISO2 key: none")
-#else:
+#member of
 member_of = []    
 for peer in peers:
     peer_tick = "PP_"+peer
-    #st.write(peer_tick)
     df_mp = sovdb_read_gen(peer_tick)
     peers_t = df_mp.m_key
     if key in peers_t.to_list():
-        #st.write(peers_t)    
         member_of.append(peer)
-        
-#st.write(member_of)
 st.write("Member of: "+', '.join(member_of))
     
 st.header('Rankings')
