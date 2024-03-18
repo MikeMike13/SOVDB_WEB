@@ -945,4 +945,24 @@ download2 = st.download_button(
     file_name="PEERS-"+peers+".xlsx",
     mime='application/vnd.ms-excel'
 )
-            
+         
+peers_c = ""   
+df_pc = sovdb_read_gen("PP_"+peers)
+df_pc = df_pc.sort_values(by='country')
+cntr = df_pc.country.to_list()
+cm_keys = df_pc.m_key.to_list()
+i=0
+for c in cntr:
+    #st.write(str(i+1)+".")
+    if i==len(cntr)-1:
+        peers_c = peers_c+str(i+1)+". "+ c + " ("+cm_keys[i]+")."
+    else:
+        peers_c = peers_c +str(i+1)+". "+ c + " ("+cm_keys[i]+"), "
+    i = i+1
+
+peers_c = peers +": "+ peers_c
+st.write(peers_c)
+#peers_t = df_mp.m_key
+#if key in peers_t.to_list():
+#    member_of.append(peer)
+#st.write("Member of: "+', '.join(member_of))   
