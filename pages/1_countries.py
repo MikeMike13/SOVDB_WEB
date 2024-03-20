@@ -187,9 +187,9 @@ cols=st.columns(4)
 with cols[0]:
     st.write("Moody's: "+Moodys_r+" "+Moodys_o)       
 with cols[1]:
-    st.write("Moody's: "+SNP_r+" "+SNP_o)     
+    st.write("S&P's: "+SNP_r+" "+SNP_o)     
 with cols[2]:
-    st.write("Moody's: "+Fitch_r+" "+Fitch_o) 
+    st.write("Fitch's: "+Fitch_r+" "+Fitch_o) 
     
 cols=st.columns(7)
 with cols[0]:
