@@ -45,7 +45,15 @@ def ticker_exists(ticker):
      rows = cur.fetchall()
      rows = np.array([*rows])
      return rows.size !=0
-
+ 
+def table_exists(ticker):
+     #query_s = "SELECT * FROM sovdb_schema.\""+ticker+"\""
+     query_s = "SELECT EXISTS (SELECT FROM pg_tables WHERE  schemaname = 'sovdb_schema' AND    tablename  = '"+ticker+"');"
+     cur = conn.cursor()
+     cur.execute(query_s)     
+     rows = cur.fetchall()     
+     return rows[0][0]
+ 
 def sovdb_read_gen(ticker):
     selectquery = "SELECT * FROM sovdb_schema.\""+ticker+"\""
     cur = conn.cursor()
@@ -117,8 +125,26 @@ key = df_all[df_all.name==countr].m_key.values[0]
 df_p = sovdb_read_gen("peers")
 peers = df_p.p_key
 
+#get ratings   
+if table_exists(key+"_RATINGS"):        
+    df_ratings = sovdb_read_gen(key+"_RATINGS")
+    Moodys_r = df_ratings.Moodys_r.values[-1]
+    Moodys_o = df_ratings.Moodys_o.values[-1]
+    SNP_r = df_ratings.SNP_r.values[-1]
+    SNP_o = df_ratings.SNP_o.values[-1]
+    Fitch_r = df_ratings.Fitch_r.values[-1]
+    Fitch_o = df_ratings.Fitch_o.values[-1]
+else:
+    Moodys_r = "None"
+    Moodys_o = ""
+    SNP_r = "None"
+    SNP_o = ""
+    Fitch_r = "None"
+    Fitch_o = ""
+
 st.header('Description data')
 cols=st.columns(4)
+
 with cols[0]:
     if (len(df_all[df_all.name==countr].name.values[0])==0):
         st.write("Name: none")
@@ -159,21 +185,12 @@ with cols[2]:
         
 cols=st.columns(4)
 with cols[0]:
-    if (len(df_all[df_all.name==countr].moodys.values[0])==0):
-        st.write("Moody's': none")
-    else:
-        st.write("Moody's: "+df_all[df_all.name==countr].moodys.values[0])    
+    st.write("Moody's: "+Moodys_r+" "+Moodys_o)       
 with cols[1]:
-    if (len(df_all[df_all.name==countr].snp.values[0])==0):
-        st.write("S&P: none")
-    else:
-        st.write("S&P: "+df_all[df_all.name==countr].snp.values[0])    
+    st.write("Moody's: "+SNP_r+" "+SNP_o)     
 with cols[2]:
-    if (len(df_all[df_all.name==countr].fitch.values[0])==0):
-        st.write("Fitch: none")
-    else:
-        st.write("Fitch: "+df_all[df_all.name==countr].fitch.values[0])    
-
+    st.write("Moody's: "+Fitch_r+" "+Fitch_o) 
+    
 cols=st.columns(7)
 with cols[0]:
     if (len(df_all[df_all.name==countr].mof_page.values[0])==0):
