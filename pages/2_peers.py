@@ -14,6 +14,14 @@ conn = ps.connect(database = "sovdb",
                         password = "mikesovdb13",
                         port = 5432)
 
+def table_exists(ticker):
+     #query_s = "SELECT * FROM sovdb_schema.\""+ticker+"\""
+     query_s = "SELECT EXISTS (SELECT FROM pg_tables WHERE  schemaname = 'sovdb_schema' AND    tablename  = '"+ticker+"');"
+     cur = conn.cursor()
+     cur.execute(query_s)     
+     rows = cur.fetchall()     
+     return rows[0][0]
+ 
 def ticker_exists(ticker):
      query_s = "SELECT * FROM sovdb_schema.""macro_indicators"" WHERE ""ticker"" = '"+ticker+"'"    
      cur = conn.cursor()
@@ -778,7 +786,22 @@ if peers_t:
     
     empty_strs = ["" for x in range(peers_s_keys.shape[0])]
     
+    Rating_str = []
+    
     for peer in peers_s_keys:        
+        #Ratings
+        
+        if table_exists(peer+"_RATINGS"):        
+            df_ratings = sovdb_read_gen(peer+"_RATINGS")    
+            #st.write(df_ratings)
+            Moodys_r = df_ratings.Moodys_r.values[-1]            
+            SNP_r = df_ratings.SNP_r.values[-1]            
+            Fitch_r = df_ratings.Fitch_r.values[-1]            
+            Rating_str.append(Moodys_r+"/"+SNP_r+"/"+Fitch_r)
+            #is_rating = 1
+        else:
+            Rating_str.append("-/-/-")
+        
         #GDP USD
         temp1 = sovdb_read_date(peer+"_"+p_tick1, peers_d)
         tick1_data.append(round(temp1,1))
@@ -828,7 +851,10 @@ if peers_t:
         tick10_data.append(round(temp10,1))
         
         #debt to revenues        
-        temp = temp10/temp6*100
+        if temp6:
+            temp = temp10/temp6*100
+        else:
+            temp = 0
         tick10a_data.append(round(temp,1))
         
         #interest
@@ -836,7 +862,10 @@ if peers_t:
         tick11_data.append(round(temp11,1))
         
         #int to revenues        
-        temp = temp11/temp6*100
+        if temp6:
+            temp = temp11/temp6*100
+        else:
+            temp = 0
         tick11a_data.append(round(temp,1))
     
         #External
@@ -860,7 +889,10 @@ if peers_t:
         tick14_data.append(round(temp14/1000000000,1))
         
         #External Debt, %GDP
-        temp = (temp14/1000000000)/temp1*100
+        if temp1:
+            temp = (temp14/1000000000)/temp1*100
+        else:
+            temp = 0
         tick14a_data.append(round(temp,1))
         
         #Reserves / External Debt
@@ -918,7 +950,7 @@ if peers_t:
             tick20_data.append(0)
 #            tick20_data.append(round(temp20,1))
             
-    df_p = pd.DataFrame({'MACRO': empty_strs, indics[0]: tick1_data,indics[1]: tick2_data,indics[2]: tick3_data,\
+    df_p = pd.DataFrame({'M/S/F':Rating_str, 'MACRO': empty_strs, indics[0]: tick1_data,indics[1]: tick2_data,indics[2]: tick3_data,\
                          indics[3]: tick4_data,indics[4]: tick4a_data, indics[5]: tick5_data, indics[6]: tick5a_data,\
                          'FISCAL, %GDP UNO': empty_strs, indics[7]: tick6_data,  indics[8]: tick7_data, indics[9]: tick11_data, indics[10]: tick8_data, indics[11]: tick8a_data, indics[12]: tick9_data,\
                          indics[13]: tick10_data, indics[14]: tick10a_data, indics[15]: tick11a_data,\

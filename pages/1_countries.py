@@ -125,14 +125,19 @@ peers = df_p.p_key
 #get ratings   
 df_rscale = sovdb_read_gen("Rating_Scales")
 is_rating = 0
+
 if table_exists(key+"_RATINGS"):        
-    df_ratings = sovdb_read_gen(key+"_RATINGS")    
+    df_ratings = sovdb_read_gen(key+"_RATINGS")        
     Moodys_r = df_ratings.Moodys_r.values[-1]
     Moodys_o = df_ratings.Moodys_o.values[-1]
     SNP_r = df_ratings.SNP_r.values[-1]
     SNP_o = df_ratings.SNP_o.values[-1]
     Fitch_r = df_ratings.Fitch_r.values[-1]
     Fitch_o = df_ratings.Fitch_o.values[-1]
+    
+    Big3_cat_s = df_ratings.big3_cat_s.values[-1]
+    Big3_cat   = df_ratings.big3_cat.values[-1]
+    
     is_rating = 1
 else:
     Moodys_r = "None"
@@ -467,7 +472,8 @@ if is_rating:
         ax.xaxis.set_major_formatter(formatter)
         plt.show() 
         st.pyplot(fig)
-    
+st.write("Ratings caterory: "+Big3_cat)    
+
 st.subheader('Macro')
 cols=st.columns(2)        
 with cols[0]:
@@ -593,10 +599,12 @@ with cols[0]:
          
          p1 = ax.plot(df, color=mymap[0], label='population',linewidth=0.8) 
          ax.axvline(x=datetime(date.today().year-1, 12, 31), color = mymap[0],linestyle='--')         
-         pop_last = df.loc[datetime(date.today().year-1, 12, 31).strftime('%Y-%m-%d')]
-         pop_10Y = df.loc[datetime(date.today().year-10, 12, 31).strftime('%Y-%m-%d')]
-         pop_pch = ((pop_last.values[0]/pop_10Y.values[0])**(1/10)-1)*100         
-         ax.text(datetime(date.today().year-1, 12, 31), pop_last, "10Y: "+str(round(pop_pch,1))+"%", fontsize=8,color='r');
+                  
+         if (df.index[-1]>datetime(date.today().year-1, 12, 31)):
+             pop_last = df.loc[datetime(date.today().year-1, 12, 31).strftime('%Y-%m-%d')]
+             pop_10Y = df.loc[datetime(date.today().year-10, 12, 31).strftime('%Y-%m-%d')]
+             pop_pch = ((pop_last.values[0]/pop_10Y.values[0])**(1/10)-1)*100         
+             ax.text(datetime(date.today().year-1, 12, 31), pop_last, "10Y: "+str(round(pop_pch,1))+"%", fontsize=8,color='r');
          
          #ticker2        
          temp = sovdb_read(ticker2_sel, st_date)
@@ -769,16 +777,18 @@ with cols[0]:
         
         p1 = ax.plot(df, color=mymap[0], label='% GDP',linewidth=0.8) 
         ax.axvline(x=datetime(date.today().year-1, 12, 31), color = mymap[0],linestyle='--')
-        last1 = df.loc[datetime(date.today().year-1, 12, 31).strftime('%Y-%m-%d')]
-        ax.text(datetime(date.today().year-1, 12, 31), last1, last1.values[0], fontsize=8,color=mymap[0]);
+        if (df.index[-1]>datetime(date.today().year-1, 12, 31)):
+            last1 = df.loc[datetime(date.today().year-1, 12, 31).strftime('%Y-%m-%d')]
+            ax.text(datetime(date.today().year-1, 12, 31), last1, last1.values[0], fontsize=8,color=mymap[0]);
         
         macro_data['DEBT_REV'] = macro_data['GGXWDG_NGDP_Y_WEO']/macro_data['GGR_NGDP_Y_WEO']*100
         df = macro_data['DEBT_REV'].to_frame().dropna() 
         
         ax2 = ax.twinx()
         p2 = ax2.plot(df, color=mymap[1], label='% REV, rhs',linewidth=0.8) 
-        last2 = df.loc[datetime(date.today().year-1, 12, 31).strftime('%Y-%m-%d')]
-        ax2.text(datetime(date.today().year-1, 12, 31), last2, round(last2.values[0],1), fontsize=8,color=mymap[1]);
+        if (df.index[-1]>datetime(date.today().year-1, 12, 31)):
+            last2 = df.loc[datetime(date.today().year-1, 12, 31).strftime('%Y-%m-%d')]
+            ax2.text(datetime(date.today().year-1, 12, 31), last2, round(last2.values[0],1), fontsize=8,color=mymap[1]);
         
         plt.title("GG Debt") 
         p12 = p1+p2
@@ -804,15 +814,17 @@ with cols[1]:
          
          p1 = ax.plot(df, color=mymap[0], label='% GDP',linewidth=0.8) 
          ax.axvline(x=datetime(date.today().year-1, 12, 31), color = mymap[0],linestyle='--')
-         last1 = df.loc[datetime(date.today().year-1, 12, 31).strftime('%Y-%m-%d')]
-         ax.text(datetime(date.today().year-1, 12, 31), last1, round(last1.values[0],1), fontsize=8,color=mymap[0]);
+         if (df.index[-1]>datetime(date.today().year-1, 12, 31)):
+             last1 = df.loc[datetime(date.today().year-1, 12, 31).strftime('%Y-%m-%d')]
+             ax.text(datetime(date.today().year-1, 12, 31), last1, round(last1.values[0],1), fontsize=8,color=mymap[0]);
          
          df = macro_data['INT_REV'].to_frame().dropna() 
          
          ax2 = ax.twinx()
          p2 = ax2.plot(df, color=mymap[1], label='% REV, rhs',linewidth=0.8) 
-         last2 = df.loc[datetime(date.today().year-1, 12, 31).strftime('%Y-%m-%d')]
-         ax2.text(datetime(date.today().year-1, 12, 31), last2, round(last2.values[0],1), fontsize=8,color=mymap[1]);
+         if (df.index[-1]>datetime(date.today().year-1, 12, 31)):
+             last2 = df.loc[datetime(date.today().year-1, 12, 31).strftime('%Y-%m-%d')]
+             ax2.text(datetime(date.today().year-1, 12, 31), last2, round(last2.values[0],1), fontsize=8,color=mymap[1]);
          
          plt.title("GG interest") 
          p12 = p1+p2
