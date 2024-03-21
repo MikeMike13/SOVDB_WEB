@@ -459,8 +459,7 @@ if is_rating:
              
     with cols[1]:
         fig = plt.figure()
-        ax = fig.add_subplot(1, 1, 1)
-        #df_ratings
+        ax = fig.add_subplot(1, 1, 1)        
         ax.plot(df_ratings.Date, df_ratings.big3_s, color=mymap[0], label='Moodys',linewidth=0.8)     
         plt.gca().invert_yaxis()
         plt.yticks(np.arange(24), df_rscale.Generic)  # Set text labels.

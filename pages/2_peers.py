@@ -797,8 +797,7 @@ if peers_t:
             Moodys_r = df_ratings.Moodys_r.values[-1]            
             SNP_r = df_ratings.SNP_r.values[-1]            
             Fitch_r = df_ratings.Fitch_r.values[-1]            
-            Rating_str.append(Moodys_r+"/"+SNP_r+"/"+Fitch_r)
-            #is_rating = 1
+            Rating_str.append(Moodys_r+"/"+SNP_r+"/"+Fitch_r)            
         else:
             Rating_str.append("-/-/-")
         
