@@ -126,8 +126,9 @@ df_p = sovdb_read_gen("peers")
 peers = df_p.p_key
 
 #get ratings   
+df_rscale = sovdb_read_gen("Rating_Scales")
 if table_exists(key+"_RATINGS"):        
-    df_ratings = sovdb_read_gen(key+"_RATINGS")
+    df_ratings = sovdb_read_gen(key+"_RATINGS")    
     Moodys_r = df_ratings.Moodys_r.values[-1]
     Moodys_o = df_ratings.Moodys_o.values[-1]
     SNP_r = df_ratings.SNP_r.values[-1]
@@ -426,6 +427,47 @@ with cols[0]:
          plt.show() 
          st.pyplot(fig) 
          
+st.subheader('Ratings')
+cols=st.columns(2)        
+with cols[0]:    
+    df_ratings = df_ratings[df_ratings.Date>=st_date]
+    #df_ratings.Date = pd.to_datetime(df_ratings.Date)        
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1)
+    #df_ratings
+    ax.plot(df_ratings.Date, df_ratings.Moodys_s, color=mymap[0], label='Moodys',linewidth=0.8) 
+    ax.plot(df_ratings.Date, df_ratings.SNP_s, color=mymap[1], label='S&P',linewidth=0.8) 
+    ax.plot(df_ratings.Date, df_ratings.Fitch_s, color=mymap[2], label='Fitch',linewidth=0.8) 
+    
+    max_y = np.min(df_ratings.Moodys_s.dropna().to_list() + df_ratings.SNP_s.dropna().to_list()+ df_ratings.Fitch_s.dropna().to_list())-1
+    min_y = np.max(df_ratings.Moodys_s.dropna().to_list() + df_ratings.SNP_s.dropna().to_list()+ df_ratings.Fitch_s.dropna().to_list())+1    
+    
+    plt.gca().invert_yaxis()    
+    plt.yticks(np.arange(24), df_rscale.Generic)  # Set text labels.    
+    plt.ylim(min_y, max_y)    
+    
+    plt.title("BIG3") 
+    plt.legend(loc=0,frameon=False) 
+    formatter = matplotlib.dates.DateFormatter('%Y')
+    ax.xaxis.set_major_formatter(formatter)
+    plt.show() 
+    st.pyplot(fig)
+         
+with cols[1]:
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1)
+    #df_ratings
+    ax.plot(df_ratings.Date, df_ratings.big3_s, color=mymap[0], label='Moodys',linewidth=0.8)     
+    plt.gca().invert_yaxis()
+    plt.yticks(np.arange(24), df_rscale.Generic)  # Set text labels.
+    plt.title("Average BIG3") 
+    plt.ylim(min_y, max_y)
+    
+    formatter = matplotlib.dates.DateFormatter('%Y')
+    ax.xaxis.set_major_formatter(formatter)
+    plt.show() 
+    st.pyplot(fig)
+    
 st.subheader('Macro')
 cols=st.columns(2)        
 with cols[0]:
