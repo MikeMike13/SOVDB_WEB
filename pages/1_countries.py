@@ -435,8 +435,7 @@ st.subheader('Ratings')
 if is_rating:
     cols=st.columns(2)        
     with cols[0]:    
-        df_ratings = df_ratings[df_ratings.Date>=st_date]
-        #df_ratings.Date = pd.to_datetime(df_ratings.Date)        
+        df_ratings = df_ratings[df_ratings.Date>=st_date]        
         fig = plt.figure()
         ax = fig.add_subplot(1, 1, 1)
         #df_ratings
