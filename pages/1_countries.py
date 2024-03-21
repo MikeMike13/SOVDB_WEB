@@ -64,11 +64,8 @@ def sovdb_read_gen(ticker):
     return df
      
 def get_rank(ticker_r1,key, date_rank,small_peers):
-    
-    #ticker_r1 = 'LP_Y_WEO'
     ticker_r10 = key+"_"+ticker_r1
     ticker_c_val = sovdb_read_date(ticker_r10, date_rank)
-    #st.write(ticker_c_val)    
     
     peers_key = "PP_WEO"
     df = sovdb_read_gen(peers_key)        
