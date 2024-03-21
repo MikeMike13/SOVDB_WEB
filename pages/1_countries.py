@@ -569,8 +569,7 @@ with cols[1]:
          plt.title("GDP: const vs USD") 
          p12 = p1+p2
          labs = [l.get_label() for l in p12]
-         ax.legend(p12, labs, loc=4, frameon=False)
-        # ax2.legend(['gdp, constant','gdp, bln USD, rhs'], loc=4) 
+         ax.legend(p12, labs, loc=4, frameon=False)        
 
          formatter = matplotlib.dates.DateFormatter('%Y')
          ax.xaxis.set_major_formatter(formatter)
