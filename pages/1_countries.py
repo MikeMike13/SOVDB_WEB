@@ -470,7 +470,9 @@ if is_rating:
         ax.xaxis.set_major_formatter(formatter)
         plt.show() 
         st.pyplot(fig)
-st.write("Ratings caterory: "+Big3_cat)    
+
+if is_rating:
+    st.write("Ratings caterory: "+Big3_cat)    
 
 st.subheader('Macro')
 cols=st.columns(2)        
