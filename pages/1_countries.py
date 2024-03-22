@@ -447,7 +447,7 @@ if is_rating:
         min_y = np.max(df_ratings.Moodys_s.dropna().to_list() + df_ratings.SNP_s.dropna().to_list()+ df_ratings.Fitch_s.dropna().to_list())+1    
         
         plt.gca().invert_yaxis()    
-        plt.yticks(np.arange(24), df_rscale.Generic)  # Set text labels.    
+        plt.yticks(range(1,len(df_rscale.Generic)+1), df_rscale.Generic)  # Set text labels.    
         plt.ylim(min_y, max_y)    
         
         plt.title("BIG3") 
@@ -462,7 +462,7 @@ if is_rating:
         ax = fig.add_subplot(1, 1, 1)        
         ax.plot(df_ratings.Date, df_ratings.big3_s, color=mymap[0], label='Moodys',linewidth=0.8)     
         plt.gca().invert_yaxis()
-        plt.yticks(np.arange(24), df_rscale.Generic)  # Set text labels.
+        plt.yticks(range(1,len(df_rscale.Generic)+1), df_rscale.Generic)  # Set text labels.    
         plt.title("Average BIG3") 
         plt.ylim(min_y, max_y)
         
@@ -471,8 +471,63 @@ if is_rating:
         plt.show() 
         st.pyplot(fig)
 
-if is_rating:
-    st.write("Ratings caterory: "+Big3_cat)    
+vs_peers = st.checkbox('Macro vs rating peers',0) 
+if vs_peers:
+    if is_rating:
+        # 
+        peers_cat_s = []
+        peers_key_sm = "PP_WEO"
+        df = sovdb_read_gen(peers_key_sm)        
+        cntr = df.country.to_list()
+        peers_key = df.m_key 
+        r_peers_key = []
+        
+        i = 0
+        for peer in peers_key:
+            ticker = peer+"_RATINGS"        
+            #if ticker != key+"_RATINGS":
+            if table_exists(ticker):
+                df_ratings = sovdb_read_gen(ticker) 
+                #st.write(Big3_cat)
+                #st.write(Big3_cat_s)
+                if Big3_cat_s == df_ratings.big3_cat_s.values[-1]:
+                    #st.write(df_ratings.big3_cat.values[-1])
+                    #st.write(df_ratings.big3_cat_s.values[-1])
+                    r_peers_key.append(peer)
+                    peers_cat_s.append(cntr[i] +"("+peer+")")
+            i+=1
+    
+        date_p = st.date_input("As of: ", pd.to_datetime('2022-12-31'))
+                
+        #st.write(r_peers_key)
+        GDP_p = [] 
+        labels = ['GDP, bln USD']
+        for peer in r_peers_key:
+            #GDP                
+            ticker_p = peer+"_NGDPD_Y_WEO"            
+            if (ticker_exists(ticker_p)):
+                GDP_p.append(sovdb_read_date(ticker_p,date_p))
+        
+        ticker_p_c = key+"_NGDPD_Y_WEO"
+        GDP_p_c = sovdb_read_date(ticker_p_c,date_p)
+        
+        #st.write(GDP_p_c)        
+        #st.write(GDP_p)        
+        fig = plt.figure()
+        ax = fig.add_subplot(1, 1, 1)
+        ax.boxplot(GDP_p,labels=labels)
+        for i in range(len(GDP_p)):
+            if GDP_p[i] == GDP_p_c:
+                ax.plot(1, GDP_p[i], marker='.', color=mymap[1], alpha=0.9)
+            else:
+                x = np.random.normal(1, 0.04, size=1)
+                ax.plot(x, GDP_p[i], marker='.', color=mymap[0], alpha=0.4)
+        #ax.plot(1, GDP_p_c, marker='.', color=mymap[1])
+        plt.title(countr+" vs "+Big3_cat+" peers (macro)")
+        plt.show() 
+        st.pyplot(fig)
+
+        st.write("Rating caterory: "+Big3_cat + ". Peers ("+str(len(peers_cat_s)-1)+"): "+', '.join(peers_cat_s))            
 
 st.subheader('Macro')
 cols=st.columns(2)        
