@@ -509,10 +509,8 @@ if vs_peers:
                 GDP_p.append(sovdb_read_date(ticker_p,date_p))
         
         ticker_p_c = key+"_NGDPD_Y_WEO"
-        GDP_p_c = sovdb_read_date(ticker_p_c,date_p)
+        GDP_p_c = sovdb_read_date(ticker_p_c,date_p)        
         
-        #st.write(GDP_p_c)        
-        #st.write(GDP_p)        
         fig = plt.figure()
         ax = fig.add_subplot(1, 1, 1)
         ax.boxplot(GDP_p,labels=labels)
