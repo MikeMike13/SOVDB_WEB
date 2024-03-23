@@ -500,28 +500,112 @@ if vs_peers:
         date_p = st.date_input("As of: ", pd.to_datetime('2022-12-31'))
                 
         #st.write(r_peers_key)
-        GDP_p = [] 
-        labels = ['GDP, bln USD']
+        GDP_p = []         
+        Pop_p = [] 
+        GDP_PPP_USD_p = [] 
+        GDP_g_p = [] 
+        CPI_p = [] 
+        
+        years_shift = 10
+        peers_d_p = datetime(date_p.year-years_shift, date_p.month, date_p.day)    
+        
+        years_shift_p = 5
+        peers_d_pp = datetime(date_p.year-years_shift_p, date_p.month, date_p.day)    
+        
         for peer in r_peers_key:
             #GDP                
-            ticker_p = peer+"_NGDPD_Y_WEO"            
+            ticker_g = peer+"_NGDPD_Y_WEO"            
+            if (ticker_exists(ticker_g)):
+                GDP_p.append(sovdb_read_date(ticker_g,date_p))
+            #Pop                
+            ticker_p = peer+"_LP_Y_WEO"            
             if (ticker_exists(ticker_p)):
-                GDP_p.append(sovdb_read_date(ticker_p,date_p))
+                Pop_p.append(sovdb_read_date(ticker_p,date_p))
+            
+            #GDP USD per Capita                
+            ticker_pc = peer+"_NGDPDPC_Y_WEO"            
+            if (ticker_exists(ticker_pc)):
+                GDP_PPP_USD_p.append(sovdb_read_date(ticker_pc,date_p)/1000)
+                
+            #GDP growth
+            ticker_g_g = peer+"_NGDP_RPCH_Y_WEO"            
+            if (ticker_exists(ticker_g_g)):
+                temp = sovdb_read(ticker_g_g, peers_d_p)
+                GDP_g_p.append(round(temp.values[1:1+years_shift].mean(),1))
+    
+            #CPI
+            ticker_cpi = peer+"_PCPIPCH_Y_WEO"            
+            if (ticker_exists(ticker_cpi)):
+                temp = sovdb_read(ticker_cpi, peers_d_pp)
+                CPI_p.append(round(temp.values[1:1+years_shift_p].mean(),1))                
+                #GDP_PPP_USD_p.append(sovdb_read_date(ticker_pc,date_p)/1000)
+                
+                
+        ticker_g_c = key+"_NGDPD_Y_WEO"
+        GDP_g_c = sovdb_read_date(ticker_g_c,date_p)        
         
-        ticker_p_c = key+"_NGDPD_Y_WEO"
-        GDP_p_c = sovdb_read_date(ticker_p_c,date_p)        
+        ticker_p_c = key+"_LP_Y_WEO"
+        Pop_p_c = sovdb_read_date(ticker_p_c,date_p)        
+        
+        ticker_pc_c = key+"_NGDPDPC_Y_WEO"
+        GDP_PPP_USD_p_c = sovdb_read_date(ticker_pc_c,date_p)/1000
+        
+        ticker_g_g = key+"_NGDP_RPCH_Y_WEO"
+        temp = sovdb_read(ticker_g_g, peers_d_p)
+        GDP_g_p_c = round(temp.values[1:1+years_shift].mean(),1)
+        
+        ticker_cpi = key+"_PCPIPCH_Y_WEO"
+        temp = sovdb_read(ticker_cpi, peers_d_pp)
+        CPI_p_c = round(temp.values[1:1+years_shift_p].mean(),1)
         
         fig = plt.figure()
-        ax = fig.add_subplot(1, 1, 1)
-        ax.boxplot(GDP_p,labels=labels)
+        ax = fig.add_subplot(1, 4, 1)
+        #ax = fig.add_subplot(nrows=1, ncols=3, figsize=(6, 6), sharey=True)
+        ax.boxplot(GDP_p,labels=['GDP, bln USD'])
         for i in range(len(GDP_p)):
-            if GDP_p[i] == GDP_p_c:
-                ax.plot(1, GDP_p[i], marker='.', color=mymap[1], alpha=0.9)
+            if GDP_p[i] == GDP_g_c:
+                ax.plot(1, GDP_p[i], marker='x', color='r', alpha=0.9)
             else:
                 x = np.random.normal(1, 0.04, size=1)
                 ax.plot(x, GDP_p[i], marker='.', color=mymap[0], alpha=0.4)
-        #ax.plot(1, GDP_p_c, marker='.', color=mymap[1])
-        plt.title(countr+" vs "+Big3_cat+" peers (macro)")
+
+       # ax = fig.add_subplot(1, 5, 2)        
+       # ax.boxplot(Pop_p,labels=['Popul, mln'])
+       # for i in range(len(Pop_p)):
+       #     if Pop_p[i] == Pop_p_c:
+       #         ax.plot(1, Pop_p[i], marker='x', color='r', alpha=0.9)
+       #     else:
+       #         x = np.random.normal(1, 0.04, size=1)
+       #         ax.plot(x, Pop_p[i], marker='.', color=mymap[0], alpha=0.4)
+                
+        ax = fig.add_subplot(1, 4, 2)        
+        ax.boxplot(GDP_PPP_USD_p,labels=['GDP pc, 000 USD'])
+        for i in range(len(GDP_PPP_USD_p)):
+            if GDP_PPP_USD_p[i] == GDP_PPP_USD_p_c:
+                ax.plot(1, GDP_PPP_USD_p[i], marker='x', color='r', alpha=0.9)
+            else:
+                x = np.random.normal(1, 0.04, size=1)
+                ax.plot(x, GDP_PPP_USD_p[i], marker='.', color=mymap[0], alpha=0.4)
+                
+        ax = fig.add_subplot(1, 4, 3)        
+        ax.boxplot(GDP_g_p,labels=['GDP, 10Yg'])
+        for i in range(len(GDP_g_p)):
+            if GDP_g_p[i] == GDP_g_p_c:
+                ax.plot(1, GDP_g_p[i], marker='x', color='r', alpha=0.9)
+            else:
+                x = np.random.normal(1, 0.04, size=1)
+                ax.plot(x, GDP_g_p[i], marker='.', color=mymap[0], alpha=0.4)
+                
+        ax = fig.add_subplot(1, 4, 4)        
+        ax.boxplot(CPI_p,labels=['CPI, 5Yg'])
+        for i in range(len(CPI_p)):
+            if CPI_p[i] == CPI_p_c:
+                ax.plot(1, CPI_p[i], marker='x', color='r', alpha=0.9)
+            else:
+                x = np.random.normal(1, 0.04, size=1)
+                ax.plot(x, CPI_p[i], marker='.', color=mymap[0], alpha=0.4)
+                
+        plt.suptitle(countr+" vs "+Big3_cat+" peers (macro)")
         plt.show() 
         st.pyplot(fig)
 
