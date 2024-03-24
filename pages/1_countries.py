@@ -574,7 +574,6 @@ if vs_peers:
             if (ticker_exists(ticker_ggdebt)):
                 GGDEBT_GDP.append(sovdb_read_date(ticker_ggdebt,date_p))
             
-            
         #GGDEBT / REV 
         GGD_REV = [m/n*100 for m, n in zip(GGDEBT_GDP, GGR_GDP)]
        
