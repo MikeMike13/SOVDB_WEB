@@ -984,7 +984,6 @@ cntr = df_pc.country.to_list()
 cm_keys = df_pc.m_key.to_list()
 i=0
 for c in cntr:
-    #st.write(str(i+1)+".")
     if i==len(cntr)-1:
         peers_c = peers_c+str(i+1)+". "+ c + " ("+cm_keys[i]+")."
     else:

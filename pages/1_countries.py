@@ -499,12 +499,20 @@ if vs_peers:
     
         date_p = st.date_input("As of: ", pd.to_datetime('2022-12-31'))
                 
-        #st.write(r_peers_key)
         GDP_p = []         
         Pop_p = [] 
         GDP_PPP_USD_p = [] 
         GDP_g_p = [] 
         CPI_p = [] 
+        
+        GGBAL_GDP_p = []
+        GGPBAL_GDP_p = []
+        GGDEBT_GDP = []
+        GGR_GDP = []
+        GGE_GDP = []
+        GGD_REV = []
+        GGINT_GDP = []
+        GGINT_REV = []
         
         years_shift = 10
         peers_d_p = datetime(date_p.year-years_shift, date_p.month, date_p.day)    
@@ -537,9 +545,44 @@ if vs_peers:
             ticker_cpi = peer+"_PCPIPCH_Y_WEO"            
             if (ticker_exists(ticker_cpi)):
                 temp = sovdb_read(ticker_cpi, peers_d_pp)
-                CPI_p.append(round(temp.values[1:1+years_shift_p].mean(),1))                
-                #GDP_PPP_USD_p.append(sovdb_read_date(ticker_pc,date_p)/1000)
+                CPI_p.append(round(temp.values[1:1+years_shift_p].mean(),1))                                
                 
+            #GGBAL_GDP            
+            ticker_ggb = peer+"_GGXCNL_NGDP_Y_WEO"            
+            if (ticker_exists(ticker_ggb)):
+                temp = sovdb_read(ticker_ggb, peers_d_pp)
+                GGBAL_GDP_p.append(round(temp.values[1:1+years_shift_p].mean(),1))                                
+
+            #GGPBAL_GDP            
+            ticker_ggpb = peer+"_GGXONLB_NGDP_Y_WEO"            
+            if (ticker_exists(ticker_ggpb)):
+                temp = sovdb_read(ticker_ggpb, peers_d_pp)
+                GGPBAL_GDP_p.append(round(temp.values[1:1+years_shift_p].mean(),1))                                
+                
+            #GGREV / GDP                
+            ticker_ggr = peer+"_GGR_NGDP_Y_WEO"            
+            if (ticker_exists(ticker_ggr)):
+                GGR_GDP.append(sovdb_read_date(ticker_ggr,date_p))
+                
+            #GGEXP / GDP                
+            ticker_gge = peer+"_GGX_NGDP_Y_WEO"            
+            if (ticker_exists(ticker_gge)):
+                GGE_GDP.append(sovdb_read_date(ticker_gge,date_p))
+                
+            #GGDEBT / GDP                
+            ticker_ggdebt = peer+"_GGXWDG_NGDP_Y_WEO"            
+            if (ticker_exists(ticker_ggdebt)):
+                GGDEBT_GDP.append(sovdb_read_date(ticker_ggdebt,date_p))
+            
+            
+        #GGDEBT / REV 
+        GGD_REV = [m/n*100 for m, n in zip(GGDEBT_GDP, GGR_GDP)]
+       
+        #INT / GDP        
+        GGINT_GDP = [m - n for m, n in zip(GGPBAL_GDP_p, GGBAL_GDP_p)]
+        
+        #INT / REV
+        GGINT_REV = [m/n*100 for m, n in zip(GGINT_GDP, GGR_GDP)]
                 
         ticker_g_c = key+"_NGDPD_Y_WEO"
         GDP_g_c = sovdb_read_date(ticker_g_c,date_p)        
@@ -558,6 +601,42 @@ if vs_peers:
         temp = sovdb_read(ticker_cpi, peers_d_pp)
         CPI_p_c = round(temp.values[1:1+years_shift_p].mean(),1)
         
+        #FISCAL
+        #GG Bal
+        ticker_ggb = key+"_GGXCNL_NGDP_Y_WEO"
+        temp = sovdb_read(ticker_ggb, peers_d_pp)
+        GGBAL_GDP_p_c = round(temp.values[1:1+years_shift_p].mean(),1)
+        
+        #GG Primary Bal
+        ticker_ggpb = key+"_GGXONLB_NGDP_Y_WEO"
+        temp = sovdb_read(ticker_ggpb, peers_d_pp)
+        GGPBAL_GDP_p_c = round(temp.values[1:1+years_shift_p].mean(),1)
+        
+        #GG rev
+        ticker_ggr = key+"_GGR_NGDP_Y_WEO"
+        temp = sovdb_read_date(ticker_ggr, peers_d_p)
+        GGR_GDP_c = sovdb_read_date(ticker_ggr,date_p)
+        
+        #GG exp
+        ticker_gge = key+"_GGX_NGDP_Y_WEO"
+        temp = sovdb_read_date(ticker_gge, peers_d_p)
+        GGE_GDP_c = sovdb_read_date(ticker_gge,date_p)
+        
+        #GG Debt
+        ticker_ggdebt = key+"_GGXWDG_NGDP_Y_WEO"
+        temp = sovdb_read_date(ticker_ggdebt, peers_d_p)
+        GGDEBT_GDP_c = sovdb_read_date(ticker_ggdebt,date_p)
+        
+        #GGDebt / REV
+        GGD_REV_c = GGDEBT_GDP_c / GGR_GDP_c*100
+        
+        #GGINT / GDP
+        GGINT_GDP_c = GGPBAL_GDP_p_c - GGBAL_GDP_p_c
+        
+        #GGINT / REV
+        GGINT_REV_c = GGINT_GDP_c / GGR_GDP_c*100
+        
+        ###MACRO
         fig = plt.figure()
         ax = fig.add_subplot(1, 4, 1)
         #ax = fig.add_subplot(nrows=1, ncols=3, figsize=(6, 6), sharey=True)
@@ -608,7 +687,93 @@ if vs_peers:
         plt.suptitle(countr+" vs "+Big3_cat+" peers (macro)")
         plt.show() 
         st.pyplot(fig)
+            
+        #FISCAL
+        fig = plt.figure()
+        ax = fig.add_subplot(1, 4, 1)        
+        ax.boxplot(GGBAL_GDP_p,labels=['Bal, 5Y, %GDP'])
+        for i in range(len(GGBAL_GDP_p)):
+            if GGBAL_GDP_p[i] == GGBAL_GDP_p_c:
+                ax.plot(1, GGBAL_GDP_p[i], marker='x', color='r', alpha=0.9)
+            else:
+                x = np.random.normal(1, 0.04, size=1)
+                ax.plot(x, GGBAL_GDP_p[i], marker='.', color=mymap[0], alpha=0.4)
 
+        ax = fig.add_subplot(1, 4, 2)        
+        ax.boxplot(GGPBAL_GDP_p,labels=['Pr bal, 5Y, %GDP'])
+        for i in range(len(GGPBAL_GDP_p)):
+            if GGPBAL_GDP_p[i] == GGPBAL_GDP_p_c:
+                ax.plot(1, GGPBAL_GDP_p[i], marker='x', color='r', alpha=0.9)
+            else:
+                x = np.random.normal(1, 0.04, size=1)
+                ax.plot(x, GGPBAL_GDP_p[i], marker='.', color=mymap[0], alpha=0.4)
+              
+        ax = fig.add_subplot(1, 4, 3)        
+        ax.boxplot(GGR_GDP,labels=['Rev, %GDP'])
+        for i in range(len(GGR_GDP)):
+            if GGR_GDP[i] == GGR_GDP_c:
+                ax.plot(1, GGR_GDP[i], marker='x', color='r', alpha=0.9)
+            else:
+                x = np.random.normal(1, 0.04, size=1)
+                ax.plot(x, GGR_GDP[i], marker='.', color=mymap[0], alpha=0.4)
+                
+        ax = fig.add_subplot(1, 4, 4)        
+        ax.boxplot(GGE_GDP,labels=['Exp, %GDP'])
+        for i in range(len(GGE_GDP)):
+            if GGE_GDP[i] == GGE_GDP_c:
+                ax.plot(1, GGE_GDP[i], marker='x', color='r', alpha=0.9)
+            else:
+                x = np.random.normal(1, 0.04, size=1)
+                ax.plot(x, GGE_GDP[i], marker='.', color=mymap[0], alpha=0.4)
+                
+                
+        plt.suptitle(countr+" vs "+Big3_cat+" peers (fiscal 1)")
+        plt.show() 
+        st.pyplot(fig)
+        
+        #FISCAL
+        fig = plt.figure()      
+        
+        ax = fig.add_subplot(1, 4, 1)        
+        ax.boxplot(GGDEBT_GDP,labels=['Debt, %GDP'])
+        for i in range(len(GGDEBT_GDP)):
+            if GGDEBT_GDP[i] == GGDEBT_GDP_c:
+                ax.plot(1, GGDEBT_GDP[i], marker='x', color='r', alpha=0.9)
+            else:
+                x = np.random.normal(1, 0.04, size=1)
+                ax.plot(x, GGDEBT_GDP[i], marker='.', color=mymap[0], alpha=0.4)
+
+        ax = fig.add_subplot(1, 4, 2)        
+        ax.boxplot(GGD_REV,labels=['Debt, %REV'])
+        for i in range(len(GGD_REV)):
+            if GGD_REV[i] == GGD_REV_c:
+                ax.plot(1, GGD_REV[i], marker='x', color='r', alpha=0.9)
+            else:
+                x = np.random.normal(1, 0.04, size=1)
+                ax.plot(x, GGD_REV[i], marker='.', color=mymap[0], alpha=0.4)
+                
+        ax = fig.add_subplot(1, 4, 3)        
+        ax.boxplot(GGINT_GDP,labels=['Int, %GDP'])
+        for i in range(len(GGINT_GDP)):
+            if GGINT_GDP[i] == GGINT_GDP_c:
+                ax.plot(1, GGINT_GDP[i], marker='x', color='r', alpha=0.9)
+            else:
+                x = np.random.normal(1, 0.04, size=1)
+                ax.plot(x, GGINT_GDP[i], marker='.', color=mymap[0], alpha=0.4)
+                
+        ax = fig.add_subplot(1, 4, 4)        
+        ax.boxplot(GGINT_REV,labels=['Int, %REV'])
+        for i in range(len(GGINT_REV)):
+            if GGINT_REV[i] == GGINT_REV_c:
+                ax.plot(1, GGINT_REV[i], marker='x', color='r', alpha=0.9)
+            else:
+                x = np.random.normal(1, 0.04, size=1)
+                ax.plot(x, GGINT_REV[i], marker='.', color=mymap[0], alpha=0.4)
+                
+        plt.suptitle(countr+" vs "+Big3_cat+" peers (fiscal 2)")
+        plt.show() 
+        st.pyplot(fig)
+        
         st.write("Rating caterory: "+Big3_cat + ". Peers ("+str(len(peers_cat_s)-1)+"): "+', '.join(peers_cat_s))            
 
 st.subheader('Macro')
