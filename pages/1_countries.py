@@ -868,8 +868,6 @@ if vs_peers:
             plt.suptitle(countr+" vs "+Big3_cat+" peers (fiscal 2)")
             plt.show() 
             st.pyplot(fig)
-                
-       
         st.write("Rating caterory: "+Big3_cat + ". Peers ("+str(len(peers_cat_s)-1)+"): "+', '.join(peers_cat_s))            
 
 st.subheader('Macro')
