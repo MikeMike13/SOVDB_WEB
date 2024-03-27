@@ -712,9 +712,7 @@ if vs_peers:
         
         RES_GDP_p_c = (RES_USD_p_c/1000000000) / GDP_p_c *100
         
-        #add to dataframe
-        #st.write(RES_GDP_p)
-        #st.write(r_peers_key)
+        #add to dataframe        
         df_f = pd.DataFrame({'GDP_USD':GDP_p, 'POP':Pop_p, 'GDP_pc_USD':GDP_PPP_USD_p,'GDP_g_10Y':GDP_g_p,'CPI_5Y':CPI_p,\
                              'CA_5Y':CA_GDP_p, 'EXTD_GDP':EXTD_GDP_p, 'RES_GDP':RES_GDP_p,\
                              'GGBAL_GDP_5Y':GGBAL_GDP_p, 'GGPBAL_GDP_5Y':GGPBAL_GDP_p, 'REV_GDP':GGR_GDP, 'EXP_GDP':GGE_GDP,\
