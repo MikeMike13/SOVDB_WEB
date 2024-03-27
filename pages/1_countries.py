@@ -124,6 +124,8 @@ peers = df_p.p_key
 
 #get ratings   
 df_rscale = sovdb_read_gen("Rating_Scales")
+r_categories_s = df_rscale.score_cat.unique()
+r_categories = df_rscale.Category.unique()
 is_rating = 0
 
 if table_exists(key+"_RATINGS"):        
@@ -136,7 +138,9 @@ if table_exists(key+"_RATINGS"):
     Fitch_o = df_ratings.Fitch_o.values[-1]
     
     Big3_cat_s = df_ratings.big3_cat_s.values[-1]
-    Big3_cat   = df_ratings.big3_cat.values[-1]
+    Big3_cat   = df_ratings.big3_cat.values[-1]    
+    Big3_cat_ind = r_categories_s[r_categories_s==Big3_cat_s]
+    
     
     is_rating = 1
 else:
@@ -473,6 +477,16 @@ if is_rating:
 
 vs_peers = st.checkbox('Macro vs rating peers',0) 
 if vs_peers:
+    cols=st.columns(4)
+    with cols[0]:
+        by_rating = st.checkbox('by rating category',1) 
+    with cols[1]:
+        selected_category = st.selectbox("Category: ",pd.DataFrame(r_categories), index=int(Big3_cat_ind[0])-1)
+    with cols[2]:
+        by_peer = st.checkbox('by peer group',0) 
+    with cols[3]:
+        selected_peers = st.selectbox("by peers",peers, index=0)
+    
     if is_rating:
         # 
         peers_cat_s = []
@@ -481,22 +495,38 @@ if vs_peers:
         cntr = df.country.to_list()
         peers_key = df.m_key 
         r_peers_key = []
+        selected_category_s = r_categories_s[r_categories==selected_category]       
         
         i = 0
-        for peer in peers_key:
-            ticker = peer+"_RATINGS"        
-            #if ticker != key+"_RATINGS":
-            if table_exists(ticker):
-                df_ratings = sovdb_read_gen(ticker) 
-                #st.write(Big3_cat)
-                #st.write(Big3_cat_s)
-                if Big3_cat_s == df_ratings.big3_cat_s.values[-1]:
-                    #st.write(df_ratings.big3_cat.values[-1])
-                    #st.write(df_ratings.big3_cat_s.values[-1])
-                    r_peers_key.append(peer)
-                    peers_cat_s.append(cntr[i] +"("+peer+")")
-            i+=1
-    
+        if by_rating:
+            vs_peers_name = selected_category            
+            for peer in peers_key:
+                ticker = peer+"_RATINGS"                        
+                if table_exists(ticker):
+                    df_ratings = sovdb_read_gen(ticker)                     
+                    if selected_category_s == df_ratings.big3_cat_s.values[-1]:                        
+                        r_peers_key.append(peer)
+                        peers_cat_s.append(cntr[i] +"("+peer+")")
+                i+=1
+            
+        if by_peer:
+            peers_cat_s = []
+            r_peers_key = []
+            vs_peers_name = selected_peers 
+            
+            peers_key_selected = "PP_"+selected_peers
+            df = sovdb_read_gen(peers_key_selected)        
+            cntr = df.country.to_list()
+            r_peers_key = df.m_key.to_list() 
+            i=0
+            for peer in r_peers_key:                            
+                peers_cat_s.append(cntr[i] +"("+peer+")")               
+                i+=1
+                
+        if key not in(r_peers_key):            
+            r_peers_key.append(key)
+            peers_cat_s.append(countr +"("+key+")")
+            
         date_p = st.date_input("As of: ", pd.to_datetime('2022-12-31'))
                 
         GDP_p = []         
@@ -589,12 +619,18 @@ if vs_peers:
             ticker_extd = peer+"_DDNIIPRESGDP_Y_CUST"            
             if (ticker_exists(ticker_extd)):
                 EXTD_GDP_p.append(sovdb_read_date(ticker_extd,date_p)) 
+            else:
+                #st.write(peer)
+                EXTD_GDP_p.append(0)
   
             #Reserves, USD
             ticker_res = peer+"_DDEXTDUSD_Y_WB"            
             if (ticker_exists(ticker_res)):
                 RES_USD_p.append(sovdb_read_date(ticker_res,date_p)) 
-                
+            else:
+                #st.write(peer)
+                RES_USD_p.append(0)
+                    
         #GGDEBT / REV 
         GGD_REV = [m/n*100 for m, n in zip(GGDEBT_GDP, GGR_GDP)]
        
@@ -619,7 +655,7 @@ if vs_peers:
         
         ticker_cpi = key+"_PCPIPCH_Y_WEO"
         temp = sovdb_read(ticker_cpi, peers_d_pp)
-        CPI_p_c = round(temp.values[1:1+years_shift_p].mean(),1)
+        CPI_p_c = round(temp.values[1:1+years_shift_p].mean(),1)        
         
         #FISCAL
         #GG Bal
@@ -677,10 +713,13 @@ if vs_peers:
         RES_GDP_p_c = (RES_USD_p_c/1000000000) / GDP_p_c *100
         
         #add to dataframe
+        #st.write(RES_GDP_p)
+        #st.write(r_peers_key)
         df_f = pd.DataFrame({'GDP_USD':GDP_p, 'POP':Pop_p, 'GDP_pc_USD':GDP_PPP_USD_p,'GDP_g_10Y':GDP_g_p,'CPI_5Y':CPI_p,\
                              'CA_5Y':CA_GDP_p, 'EXTD_GDP':EXTD_GDP_p, 'RES_GDP':RES_GDP_p,\
                              'GGBAL_GDP_5Y':GGBAL_GDP_p, 'GGPBAL_GDP_5Y':GGPBAL_GDP_p, 'REV_GDP':GGR_GDP, 'EXP_GDP':GGE_GDP,\
                              'GGDEBT_GDP':GGDEBT_GDP, 'GGDEBT_REV':GGD_REV, 'INT_GDP':GGINT_GDP, 'INT_REV':GGINT_REV}, index=r_peers_key)
+        
         #excel
         buffer = io.BytesIO()
         with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:    
@@ -743,7 +782,7 @@ if vs_peers:
                     x = np.random.normal(1, 0.04, size=1)
                     ax.plot(x, CPI_p[i], marker='.', color=mymap[0], alpha=0.4)
                     
-            plt.suptitle(countr+" vs "+Big3_cat+" peers (macro)")
+            plt.suptitle(countr+" ("+Big3_cat+") "+" vs "+vs_peers_name+" peers (macro)")
             plt.show() 
             st.pyplot(fig)
         with cols[1]:
@@ -776,7 +815,7 @@ if vs_peers:
                 else:
                     x = np.random.normal(1, 0.04, size=1)
                     ax.plot(x, EXTD_GDP_p[i], marker='.', color=mymap[0], alpha=0.4)    
-            plt.suptitle(countr+" vs "+Big3_cat+" peers (external)")
+            plt.suptitle(countr+" ("+Big3_cat+") "+" vs "+vs_peers_name+" peers (external)")
             plt.show() 
             st.pyplot(fig)
                     
@@ -821,7 +860,7 @@ if vs_peers:
                     ax.plot(x, GGE_GDP[i], marker='.', color=mymap[0], alpha=0.4)
                     
                     
-            plt.suptitle(countr+" vs "+Big3_cat+" peers (fiscal 1)")
+            plt.suptitle(countr+" ("+Big3_cat+") "+" vs "+vs_peers_name+" peers (fiscal 1)")
             plt.show() 
             st.pyplot(fig)
         
@@ -865,10 +904,10 @@ if vs_peers:
                     x = np.random.normal(1, 0.04, size=1)
                     ax.plot(x, GGINT_REV[i], marker='.', color=mymap[0], alpha=0.4)
                     
-            plt.suptitle(countr+" vs "+Big3_cat+" peers (fiscal 2)")
+            plt.suptitle(countr+" ("+Big3_cat+") "+" vs "+vs_peers_name+" peers (fiscal 2)")
             plt.show() 
             st.pyplot(fig)
-        st.write("Rating caterory: "+Big3_cat + ". Peers ("+str(len(peers_cat_s)-1)+"): "+', '.join(peers_cat_s))            
+        st.write(vs_peers_name + " peers ("+str(len(peers_cat_s)-1)+"): "+', '.join(peers_cat_s))            
 
 st.subheader('Macro')
 cols=st.columns(2)        
