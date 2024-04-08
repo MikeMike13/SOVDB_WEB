@@ -1,7 +1,7 @@
 numpy
 pandas
 matplotlib
-streamlit==1.32.0
+streamlit
 streamlit-timeline==0.0.2
 streamlit-vis-timeline==0.3.0
 pyxlsb
