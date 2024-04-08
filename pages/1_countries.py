@@ -1460,13 +1460,13 @@ tag_ind = []
 for i in range(events.shape[0]):
     if(tags_events in events.loc[i].tag):
         tag_ind.append(float(events.loc[i].id))
-events_f = events[(events.id.isin(tag_ind))].sort_values(by=['Date'], ascending=False).reset_index()
+events_f = events[(events.id.isin(tag_ind))].sort_values(by=['Date'], ascending=True).reset_index()
 
 items = []    
 for i in range(events_f.shape[0]):
     items.append({"id":str(events_f.loc[i].id),"content": events_f.loc[i].des, "start": events_f.loc[i].Date.strftime('%Y-%b-%d')})   
 
-st.write(items)
+#st.write(events_f)
 timeline = st_timeline(items, groups=[], options={}, height="300px")
 
 st.write(events_f)
@@ -1474,7 +1474,7 @@ if (timeline!=None):
     sel_id = timeline.get('id')
     selected_event = sovdb_read_item(table_name, 'id', sel_id)
     
-    st.write(selected_event[1])
+    st.write(selected_event[1].strftime('%d-%b-%Y'))
     st.write(selected_event[3])
     st.write(selected_event[4])
     
