@@ -2,7 +2,8 @@ numpy
 pandas
 matplotlib
 streamlit
-streamlit-timeline==0.0.2
+streamlit-timeline
+streamlit-vis-timeline
 pyxlsb
 psycopg2-binary==0.9.9
 xlsxwriter
