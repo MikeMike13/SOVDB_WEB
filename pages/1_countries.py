@@ -1435,6 +1435,7 @@ download = st.download_button(
     mime='application/vnd.ms-excel'
 )
 
+## TIMELINE
 
 #st.set_page_config(layout="wide")
 st.subheader("EVENTS")
@@ -1465,6 +1466,7 @@ items = []
 for i in range(events_f.shape[0]):
     items.append({"id":str(events_f.loc[i].id),"content": events_f.loc[i].des, "start": events_f.loc[i].Date.strftime('%Y-%b-%d')})   
 
+st.write(items)
 timeline = st_timeline(items, groups=[], options={}, height="300px")
 st.write(events_f)
 if (timeline!=None):
