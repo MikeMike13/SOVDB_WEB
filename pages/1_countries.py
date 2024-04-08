@@ -1,4 +1,3 @@
-import streamlit as st
 import psycopg2 as ps
 import pandas as pd
 #import math
@@ -7,8 +6,8 @@ import matplotlib
 import matplotlib.pyplot as plt
 from datetime import date, datetime
 import io
+import streamlit as st
 from streamlit_timeline import st_timeline
-
 
 conn = ps.connect(database = "sovdb", 
                         user = "mike", 
