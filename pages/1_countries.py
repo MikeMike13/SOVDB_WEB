@@ -1462,12 +1462,22 @@ for i in range(events.shape[0]):
         tag_ind.append(float(events.loc[i].id))
 events_f = events[(events.id.isin(tag_ind))].sort_values(by=['Date'], ascending=False).reset_index()
 
-items = []    
-for i in range(events_f.shape[0]):
-    items.append({"id":str(events_f.loc[i].id),"content": events_f.loc[i].des, "start": events_f.loc[i].Date.strftime('%Y-%b-%d')})   
+#items = []    
+#for i in range(events_f.shape[0]):
+#    items.append({"id":str(events_f.loc[i].id),"content": events_f.loc[i].des, "start": events_f.loc[i].Date.strftime('%Y-%b-%d')})   
+
+items = [
+    {"id": 1, "content": "2022-10-20", "start": "2022-10-20"},
+    {"id": 2, "content": "2022-10-09", "start": "2022-10-09"},
+    {"id": 3, "content": "2022-10-18", "start": "2022-10-18"},
+    {"id": 4, "content": "2022-10-16", "start": "2022-10-16"},
+    {"id": 5, "content": "2022-10-25", "start": "2022-10-25"},
+    {"id": 6, "content": "rthjtyhjrtkituk,yujrtjrtyjt", "start": "2022-10-27"},
+]
 
 st.write(items)
 timeline = st_timeline(items, groups=[], options={}, height="300px")
+
 st.write(events_f)
 if (timeline!=None):
     sel_id = timeline.get('id')
