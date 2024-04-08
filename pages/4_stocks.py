@@ -117,7 +117,7 @@ ax.plot(df_y.index[-2], df_y[-2], marker=5,color=(1,0,0))
 #    ax.plot(End_date_c, End_val, marker=4,color=(1,0,0)) 
 #    
 #    
-plt.title(ticker+", "+Lastdate) 
+plt.title(df_des.rus_short+", "+Lastdate) 
 #plt.legend() 
 #
 formatter = matplotlib.dates.DateFormatter('%Y')
