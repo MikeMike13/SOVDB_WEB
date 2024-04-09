@@ -207,6 +207,7 @@ def click_button_update_add(UPDATE, Update_date,Update_number):
     if (UPDATE):      
         #st.write(Update_number)
         query = "UPDATE sovdb_schema.\""+ticker+"\" SET \"""Value\""" = '"+str(Update_number)+"' WHERE \"""Date\""" = '"+Update_date.strftime('%d-%b-%Y')+"'"        
+        #st.write(query)
         cur.execute(query)
         conn.commit()
         
@@ -231,6 +232,7 @@ def click_button_update_add(UPDATE, Update_date,Update_number):
     else:
         #addquery = "INSERT INTO sovdb_schema."""+ticker(i)+""" (""Date"", ""Value"") VALUES ('"+date+"'::date, "+Value+"::double precision) returning ""Date"";";
         query = "INSERT INTO sovdb_schema.\""+ticker+"\" (\"""Date\""", \"""Value\""") VALUES ('"+Update_date.strftime('%d-%b-%Y')+"'::date, '"+str(Update_number)+"':: double precision) returning \"""Date\""""
+        #st.write(query)
         cur.execute(query)
         conn.commit()
         st.warning("ADDED: "+ticker+": "+Update_date.strftime('%d-%b-%Y')+" - "+str(Update_number))
@@ -259,10 +261,10 @@ with cols[0]:
         UPDATE = 1
         #st.write(df)
     else:
-        Update_val = 0 
+        Update_val = 0.0 
         UPDATE = 0
 with cols[1]:    
-   Update_number = st.number_input('Value (0 if not exists)',value=Update_val)
+   Update_number = st.number_input('Value (0 if not exists)',value=Update_val,format="%.5f",step=0.00001)
 with cols[2]:
     
     st.button('Update/Add', on_click=click_button_update_add, args=(UPDATE, Update_date,Update_number))   

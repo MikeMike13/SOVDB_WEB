@@ -357,7 +357,7 @@ with cols[0]:
     )
 with cols[1]:
     st.write('Data')
-    query = "SELECT * FROM sovdb_schema.\""+ticker_show+"\"" 
+    query = "SELECT * FROM sovdb_schema.\""+ticker_show+"\" ORDER BY \"""Date\"""" 
     cur.execute(query)
     rows_sh = cur.fetchall() 
     colnames = [desc[0] for desc in cur.description]

@@ -25,6 +25,14 @@ def sovdb_read(ticker, date):
     df.index = pd.to_datetime(df.index)    
     return df
 
+def sovdb_read_gen(ticker):
+    selectquery = "SELECT * FROM sovdb_schema.\""+ticker+"\""
+    cur = conn.cursor()
+    cur.execute(selectquery);
+    rows = cur.fetchall()
+    colnames = [desc[0] for desc in cur.description]
+    df = pd.DataFrame(rows,columns=colnames)     
+    return df
 
 #all bonds
 query = "SELECT * FROM sovdb_schema.equities"
@@ -134,16 +142,29 @@ cols=st.columns(2)
 with cols[0]:
     is_stock = st.checkbox('use stock', 1) 
     df = df.rename(columns={"Close": ticker0+"_Price", "Volume": ticker0+"_Vol"})
-    ticker_vs0 = st.selectbox("Stock: ",(stocks_sel_short), index=0)
+    ticker_vs0_st = st.selectbox("Stock: ",(stocks_sel_short), index=0)
 with cols[1]:
     is_index = st.checkbox('use index', 0) 
+    indicies = sovdb_read_gen('indicies')
+    st_ind = indicies[indicies['instrument_type']=='stock_index']
+    
+    ind_sel_short = []
+    for index in st_ind.ticker:
+        x = index.split("_")
+        ind_sel_short.append(x[1])        
+    ticker_vs0_in = st.selectbox("Index: ",(ind_sel_short), index=0)
+
+if is_stock:
+    ticker_vs0 = ticker_vs0_st    
+    ticker_vs = "STOCK_"+ticker_vs0+"_"+src+"_"+reg
+if is_index:
+    ticker_vs0 = ticker_vs0_in    
+    ticker_vs = "INDX_"+ticker_vs0
     
 if (ticker_vs0 == ticker0):
     st.warning('You have chosen the same stock')
-else:
-    ticker_vs = "STOCK_"+ticker_vs0+"_"+src+"_"+reg
-    
-    df_peer= sovdb_read(ticker_vs, date)
+else:  
+    df_peer = sovdb_read(ticker_vs, date)
     df_peer = df_peer.rename(columns={"Close": ticker_vs0+"_Price", "Volume": ticker_vs0+"_Vol"})
     
     df_all = pd.concat([df, df_peer],axis=1, join="inner")  
@@ -188,11 +209,11 @@ else:
     cols=st.columns(2)
     with cols[0]:   
         fig, ax = plt.subplots()
-        ax.scatter(df_all[ticker0+"_ret"],df_all[ticker_vs0+"_ret"],color=mymap[0], s=10)
+        ax.scatter(df_all[ticker_vs0+"_ret"],df_all[ticker0+"_ret"],color=mymap[0], s=10)
         ax.axvline(0, color=(0.65,0.65,0.65))
         ax.axhline(0, color=(0.65,0.65,0.65))
-        ax.set_xlabel(ticker0)
-        ax.set_ylabel(ticker_vs0)
+        ax.set_xlabel(ticker_vs0)
+        ax.set_ylabel(ticker0)
         plt.show() 
         st.pyplot(fig)
         
