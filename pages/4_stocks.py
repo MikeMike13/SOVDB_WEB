@@ -6,6 +6,8 @@ import matplotlib
 import matplotlib.pyplot as plt
 #from datetime import date, datetime
 
+st.set_page_config(layout="centered")
+
 conn = ps.connect(database = "sovdb", 
                         user = "mike", 
                         host= '185.26.120.148',
