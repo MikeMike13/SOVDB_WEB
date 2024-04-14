@@ -25,6 +25,7 @@ def sovdb_read(ticker, date):
     df = pd.DataFrame(rows,columns=colnames)
     df = pd.DataFrame(df).set_index('Date')
     df.index = pd.to_datetime(df.index)    
+    df = df.sort_index()
     return df
 
 def sovdb_read_gen(ticker):

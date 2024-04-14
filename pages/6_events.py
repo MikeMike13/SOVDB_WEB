@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import psycopg2 as ps
 import numpy as np
+
 from streamlit_timeline import st_timeline
 
 
