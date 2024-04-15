@@ -9,6 +9,8 @@ from datetime import datetime
 from scipy.interpolate import splrep, BSpline
 from sklearn.linear_model import LinearRegression
 
+st.set_page_config(layout="centered")
+
 conn = ps.connect(database = "sovdb", 
                         user = "mike", 
                         host= '185.26.120.148',

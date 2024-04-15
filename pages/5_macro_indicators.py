@@ -8,6 +8,8 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
+st.set_page_config(layout="centered")
+
 conn = ps.connect(database = "sovdb", 
                         user = "mike", 
                         host= '185.26.120.148',

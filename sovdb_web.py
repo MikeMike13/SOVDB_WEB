@@ -10,6 +10,8 @@ from io import BytesIO
 import io
 import numpy as np
 
+st.set_page_config(page_title="Main",layout="centered")
+
 conn = ps.connect(database = "sovdb", 
                         user = "mike", 
                         host= '185.26.120.148',
@@ -46,11 +48,6 @@ def decum(df,FREQ):
     return df
 
 mymap = ['#0051CA', '#F8AC27', '#3F863F', '#C6DBA1', '#FDD65F', '#FBEEBD', '#50766E'];
-
-st.set_page_config(
-    page_title="Main",
-    page_icon="👋",
-)
 
 #st.sidebar.success("Select a demo above.")
 

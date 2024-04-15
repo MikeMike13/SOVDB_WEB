@@ -8,6 +8,8 @@ from datetime import datetime
 import io
 import matplotlib
 
+st.set_page_config(layout="centered")
+
 conn = ps.connect(database = "sovdb", 
                         user = "mike", 
                         host= '185.26.120.148',
