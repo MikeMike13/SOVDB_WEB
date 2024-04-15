@@ -32,7 +32,7 @@ def sovdb_read(ticker, date):
     df.index = pd.to_datetime(df.index)    
     df = df.sort_index()
     return df
-
+   
 def sovdb_read_gen(ticker):
     selectquery = "SELECT * FROM sovdb_schema.\""+ticker+"\""
     cur = conn.cursor()
@@ -54,9 +54,11 @@ def sovdb_read_des(tbl, ticker):
     return df_des
 
 all_bonds = sovdb_read_gen('bonds')
+all_bonds = all_bonds[all_bonds['is_matured']==False]
 
 cols=st.columns(3)
 with cols[0]:
+    #st.write(all_bonds[all_bonds['is_matured']==False]['rus_short'])
     ticker0 = st.selectbox("Choose bond: ",(all_bonds['rus_short'].sort_values()), index=0)
     temp = all_bonds[all_bonds['rus_short']==ticker0]
     ticker      = temp['id'].array[0]
@@ -69,15 +71,16 @@ with cols[2]:
     field0 = st.selectbox("plot",("Yield_Close","Price_Close"), index=0)        
 
 #get data for selected bond
-df = sovdb_read(ticker,date)
-df = df[['Price_Close','Yield_Close','Volume']]
+df0 = sovdb_read(ticker,date)
+
+df = df0[['Price_Close','Yield_Close','Volume']]
 df = df.rename(columns={"Price_Close": ticker_isin+"_Price_Close", "Yield_Close": ticker_isin+"_Yield_Close", "Volume": ticker_isin+"_Vol"})
 field = ticker_isin+"_"+field0
 field_vol = ticker_isin+"_Vol"
 
 df_des = sovdb_read_des("bonds",ticker)
 
-cols=st.columns(4)
+cols=st.columns(5)
 with cols[0]:
     name = st.write(df_des.rus_long.values[0])
 with cols[1]:
@@ -89,7 +92,10 @@ with cols[2]:
 with cols[3]:    
     years = (df_des.maturity_date.values[0] - date.today()).days/365.25
     years_mat = st.write("years to mat: "+str(round(years,2))+"Y")
-
+with cols[4]:    
+    ticker_dur = df0['Duration'].values[-1]/365.25
+    st.write("dur: "+str(round(ticker_dur,1)))
+    
 #plot selected bond    
 fig, ax = plt.subplots()
 Lastdate = df[field].index[-1].strftime('%Y-%m-%d')
@@ -239,8 +245,25 @@ with cols[0]:
     plt.show() 
     st.pyplot(fig)
     
-fields_to_show = ['isin','rus_short','maturity_date']
-st.write(all_bonds[fields_to_show])
+st.write('All bonds by duration')
+fields_to_show = ['isin','rus_short','maturity_date','years_to_maturity','duration']
+years_to_maturity = []
+duration = []
+
+for inx, bond in all_bonds.iterrows():
+    years_to_maturity.append((bond['maturity_date'] - date.today()).days/365.25)
+    
+    df01 = sovdb_read(bond['id'],date)   
+    
+    if df01['Duration'].empty:
+        duration.append(0)
+    else:
+        duration.append(df01['Duration'].values[-1]/365.25)
+    
+all_bonds['years_to_maturity'] = years_to_maturity
+all_bonds['duration'] = duration
+
+st.write(all_bonds[fields_to_show].sort_values(by=['duration']))
 
 ##CURVE
 Curve0   = ["SU26234RMFS3","SU26229RMFS3","SU26236RMFS8","SU26228RMFS5","SU26221RMFS0","SU26230RMFS1","SU26238RMFS4"];
