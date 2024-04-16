@@ -6,3 +6,4 @@ streamlit-vis-timeline==0.3.0
 pyxlsb
 psycopg2-binary==2.9.9
 xlsxwriter
+scipy
