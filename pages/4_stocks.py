@@ -1,10 +1,12 @@
 import streamlit as st
 import psycopg2 as ps
 import pandas as pd
+import numpy as np
 #import math
 import matplotlib 
 import matplotlib.pyplot as plt
-#from datetime import date, datetime
+
+from sklearn.linear_model import LinearRegression
 
 st.set_page_config(layout="centered")
 
@@ -52,9 +54,11 @@ for stock in stocks_sel:
     x = stock.split("_")
     stocks_sel_short.append(x[1])
 
-#st.write(stocks_sel_short)
+stocks_sel_short.sort()
+
 cols=st.columns(5)
 with cols[0]:
+    #st.write(type(stocks_sel_short))
     ticker0 = st.selectbox("Choose stock: ",(stocks_sel_short), index=0)
 with cols[1]:
     date = st.date_input("Date: ", pd.to_datetime('2022-01-01'))     
@@ -146,23 +150,28 @@ with cols[0]:
     is_stock = st.checkbox('use stock', 1) 
     df = df.rename(columns={"Close": ticker0+"_Price", "Volume": ticker0+"_Vol"})
     ticker_vs0_st = st.selectbox("Stock: ",(stocks_sel_short), index=0)
+    ticker_vs0_st_name = ticker_vs0_st
 with cols[1]:
     is_index = st.checkbox('use index', 0) 
-    indicies = sovdb_read_gen('indicies')
-    st_ind = indicies[indicies['instrument_type']=='stock_index']
+    indicies = sovdb_read_gen('indicies')    
+    st_ind = indicies[indicies['instrument_type']=='stock_index'].sort_values(by='ticker')   
     
     ind_sel_short = []
     for index in st_ind.ticker:
         x = index.split("_")
         ind_sel_short.append(x[1])        
     ticker_vs0_in = st.selectbox("Index: ",(ind_sel_short), index=0)
+    temp = st_ind[st_ind['ticker']=="INDX_"+ticker_vs0_in]
+    ticker_vs0_in_name = temp['eng_short'].values[0]
 
 if is_stock:
     ticker_vs0 = ticker_vs0_st    
     ticker_vs = "STOCK_"+ticker_vs0+"_"+src+"_"+reg
+    ticker_vs_name = ticker_vs0_st_name
 if is_index:
     ticker_vs0 = ticker_vs0_in    
     ticker_vs = "INDX_"+ticker_vs0
+    ticker_vs_name = ticker_vs0_in_name
     
 if (ticker_vs0 == ticker0):
     st.warning('You have chosen the same stock')
@@ -192,7 +201,7 @@ else:
     with cols[0]:
         fig, ax = plt.subplots()
         ax.plot(df_all[ticker0+"_Price_norm"], color=mymap[0], label=ticker0+" ann ret:"+str(round(ret_ann0,1))+"% ("+str(round(ret_x,1))+"x)",linewidth=0.8) 
-        ax.plot(df_all[ticker_vs0+"_Price_norm"], color=mymap[1], label=ticker_vs0+" ann ret:"+str(round(ret_ann1,1))+"%",linewidth=0.8)   
+        ax.plot(df_all[ticker_vs0+"_Price_norm"], color=mymap[1], label=ticker_vs_name+" ann ret:"+str(round(ret_ann1,1))+"%",linewidth=0.8)   
         ax.axhline(100, color=(0.65,0.65,0.65))
         formatter = matplotlib.dates.DateFormatter('%Y')
         ax.xaxis.set_major_formatter(formatter)
@@ -203,20 +212,37 @@ else:
     with cols[1]:    
         fig, ax = plt.subplots()    
         ax.hist(df_all[ticker0+"_ret"],100, color=mymap[0],alpha = 0.7,label=ticker0+" ann vol:"+str(round(vol_ann0,1))+"% ("+str(round(vol_x,1))+"x)")
-        ax.hist(df_all[ticker_vs0+"_ret"],100, color=mymap[1],alpha = 0.7,label=ticker_vs0+" ann vol:"+str(round(vol_ann1,1))+"%")
+        ax.hist(df_all[ticker_vs0+"_ret"],100, color=mymap[1],alpha = 0.7,label=ticker_vs_name+" ann vol:"+str(round(vol_ann1,1))+"%")
+        ax.axhline(0, color=(0.65,0.65,0.65))
+        
         plt.title("Daily volatilites: "+df_all.index[0].strftime('%d-%b-%Y')+"-"+df_all.index[-1].strftime('%d-%b-%Y'))
+        
         plt.legend() 
         plt.show() 
         st.pyplot(fig) 
         
     cols=st.columns(2)
     with cols[0]:   
+        model = LinearRegression()
+        
+        x = np.array(df_all[ticker_vs0+"_ret"].values.tolist())[2:].reshape((-1, 1))
+        y = np.array(df_all[ticker0+"_ret"].values.tolist()[2:])
+        model.fit(x, y)
+        b = model.intercept_
+        k = model.coef_
+        
+        x_new = np.arange(np.min(x),  np.max(x), 0.01)
+        y_new = k*x_new+b
+        
+        
         fig, ax = plt.subplots()
-        ax.scatter(df_all[ticker_vs0+"_ret"],df_all[ticker0+"_ret"],color=mymap[0], s=10)
+        ax.scatter(df_all[ticker_vs0+"_ret"],df_all[ticker0+"_ret"],color=mymap[0], s=10, alpha=0.3)
+        ax.plot(x_new,y_new)
         ax.axvline(0, color=(0.65,0.65,0.65))
         ax.axhline(0, color=(0.65,0.65,0.65))
-        ax.set_xlabel(ticker_vs0)
+        ax.set_xlabel(ticker_vs_name)
         ax.set_ylabel(ticker0)
+        plt.title("beta: "+str(round(k[0],2)))
         plt.show() 
         st.pyplot(fig)
         
