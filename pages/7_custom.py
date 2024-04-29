@@ -77,7 +77,10 @@ for tick in tickers:
 fig, ax = plt.subplots()
 i=0
 for ticker in tickers:
-    ax.plot(data0[ticker],color=mymap[i])
+    if i==len(tickers)-1:
+        ax.plot(data0[ticker],color=(1,0,0), linestyle = '--')
+    else:
+        ax.plot(data0[ticker],color=mymap[i])
     i=i+1
 
 ax.legend(Legend)

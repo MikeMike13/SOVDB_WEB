@@ -285,7 +285,7 @@ if bool_c and Start_val*End_val:
     
     
 plt.title(ticker+", "+Lastdate) 
-plt.legend() 
+#plt.legend() 
 
 formatter = matplotlib.dates.DateFormatter('%Y')
 ax.xaxis.set_major_formatter(formatter)

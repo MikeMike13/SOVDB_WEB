@@ -34,6 +34,22 @@ def sovdb_read_item(ticker, field, value):
         return 0
     else:
         return rows[0]
+
+def click_button_add_event(Add_date,Add_tags,Add_event,Add_long_event):    
+    ticker = table_name
+    query = "INSERT INTO sovdb_schema.\""+ticker+"\" (\"""Date\""", \"""tag\""", \"""des\""", \"""long_des\""") VALUES ('"+Add_date.strftime('%d-%b-%Y')+"'::date, '"+Add_tags+"':: text, '"+Add_event+"'::text, '"+Add_long_event+"'::text)"
+    cur.execute(query)
+    conn.commit()
+    st.warning("New event was added")  
+    st.session_state.clicked = True
+
+def click_button_delete_event(DEL,event_id_del):    
+    ticker = table_name
+    query = "DELETE FROM sovdb_schema.\""+ticker+"\" WHERE \"""id\"""='"+str(event_id_del)+"'"
+    cur.execute(query)
+    conn.commit()
+    st.warning("Event was deleted")  
+    st.session_state.clicked = True
     
 #read all countries des
 df_all = sovdb_read_gen("countries")
@@ -90,31 +106,21 @@ with cols[0]:
 with cols[1]:
     tags = st.text_input('Tags (, separate)', '')
 
+
 des = st.text_input('event, title', '')   
-long_des = st.text_input('event, des', '')   
+long_des = st.text_input('event, des', '')  
 
-def click_button_add_event(Add_date,Add_tags,Add_event,Add_long_event):    
-    ticker = table_name
-    query = "INSERT INTO sovdb_schema.\""+ticker+"\" (\"""Date\""", \"""tag\""", \"""des\""", \"""long_des\""") VALUES ('"+Add_date.strftime('%d-%b-%Y')+"'::date, '"+Add_tags+"':: text, '"+Add_event+"'::text, '"+Add_long_event+"'::text)"
-    cur.execute(query)
-    conn.commit()
-    st.warning("New event was added")  
-    st.session_state.clicked = True
-
-def click_button_delete_event(DEL,event_id_del):    
-    ticker = table_name
-    query = "DELETE FROM sovdb_schema.\""+ticker+"\" WHERE \"""id\"""='"+str(event_id_del)+"'"
-    cur.execute(query)
-    conn.commit()
-    st.warning("Event was deleted")  
-    st.session_state.clicked = True
     
-cols=st.columns(3)    
+cols=st.columns(5)    
 with cols[0]: 
     st.button('Add event', on_click=click_button_add_event, args=(event_date,tags,des,long_des)) 
 with cols[1]:
-    event_id_del = st.selectbox("id to delete: ",events_f.id, index=0)
+    event_id_del = st.selectbox("id: ",events_f.id, index=0)
 with cols[2]:
+    st.button('Show event', on_click=click_button_delete_event, args=(1,event_id_del)) 
+with cols[3]:
+    st.button('Update event', on_click=click_button_delete_event, args=(1,event_id_del))     
+with cols[4]:
     st.button('Delete event', on_click=click_button_delete_event, args=(1,event_id_del)) 
-    
+        
 st.write(events_f)
