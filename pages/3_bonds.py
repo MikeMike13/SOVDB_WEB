@@ -193,7 +193,7 @@ with cols[0]:
     ax.text(df_all[field].index[-1], df_all[field][-1], round(df_all[field][-1],2), fontsize=8,color=mymap[0]);#
     
     ax.plot(df_all[field_peer], color=mymap[1], label=ticker0_vs,linewidth=0.8) 
-    ax.text(df_all[field_peer].index[-1], df_all[field_peer][-1], round(df_all[field][-1],2), fontsize=8,color=mymap[1]);#
+    ax.text(df_all[field_peer].index[-1], df_all[field_peer][-1], round(df_all[field_peer][-1],2), fontsize=8,color=mymap[1]);#
 
     plt.title("Yields: "+ticker0+" vs "+ticker0_vs+", "+Lastdate) 
     formatter = matplotlib.dates.DateFormatter('%Y')
