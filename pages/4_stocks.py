@@ -96,8 +96,13 @@ ret_MTD_abs = (df_prices[-1]-df_m[-2])
 ret_MTD_pct = (df_prices[-1]/df_m[-2]-1)*100
 #YTD
 df_y = df_prices.resample('Y').last()
-ret_YTD_abs = (df_prices[-1]-df_y[-2])
-ret_YTD_pct = (df_prices[-1]/df_y[-2]-1)*100
+
+if (df_y.shape[0] < 2):
+    ret_YTD_abs = 0
+    ret_YTD_pct = 0
+else:       
+    ret_YTD_abs = (df_prices[-1]-df_y[-2])
+    ret_YTD_pct = (df_prices[-1]/df_y[-2]-1)*100
 
 
 cols=st.columns(3)
@@ -125,7 +130,9 @@ fig, ax = plt.subplots()
 Lastdate = df.index[-1].strftime('%Y-%m-%d')
 ax.plot(df[field], color=mymap[0], label='d',linewidth=0.8) 
 ax.text(df_prices.index[-1], df_prices[-1], round(df_prices[-1],2), fontsize=8,color=mymap[0]);#
-ax.plot(df_y.index[-2], df_y[-2], marker=5,color=(1,0,0)) 
+if (df_y.shape[0] > 1):
+    ax.plot(df_y.index[-2], df_y[-2], marker=5,color=(1,0,0)) 
+    
 
 
 #if bool_y:
@@ -147,12 +154,12 @@ st.pyplot(fig)
 st.write('Choose peer')
 cols=st.columns(2)
 with cols[0]:
-    is_stock = st.checkbox('use stock', 1) 
+    is_stock = st.checkbox('use stock', 0) 
     df = df.rename(columns={"Close": ticker0+"_Price", "Volume": ticker0+"_Vol"})
     ticker_vs0_st = st.selectbox("Stock: ",(stocks_sel_short), index=0)
     ticker_vs0_st_name = ticker_vs0_st
 with cols[1]:
-    is_index = st.checkbox('use index', 0) 
+    is_index = st.checkbox('use index', 1) 
     indicies = sovdb_read_gen('indicies')    
     st_ind = indicies[indicies['instrument_type']=='stock_index'].sort_values(by='ticker')   
     
