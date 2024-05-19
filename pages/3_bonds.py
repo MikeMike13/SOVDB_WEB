@@ -339,8 +339,9 @@ end_spline = splrep(dt_end, end_values.values.tolist()[0], s=s_end)
 end_xnew = np.arange(np.ceil(dt_end[0])-1, np.ceil(dt_end[-1])+1, 0.5)
 end_value_interploated = BSpline(*end_spline)(end_xnew)
 
-st.write(df_des)
 #selected bond
+#st.write(st_values_b)
+
 dt_st_b = (df_des.maturity_date.values[0] - curve_date_st).days/365.25
 dt_end_b = (df_des.maturity_date.values[0] - curve_date_end).days/365.25
 
@@ -387,5 +388,7 @@ plt.show()
 st.pyplot(fig) 
 
 
-curve_bonds = all_bonds[all_bonds['id'].isin(Curve)]
-st.write(curve_bonds[['rus_long','issue_date','maturity_date']])    
+curve_bonds = all_bonds[all_bonds['id'].isin(Curve)].sort_values(by=['maturity_date'])
+ddd = (curve_bonds.maturity_date.values - date.today()).tolist()
+curve_bonds['years_to_mat'] =  [round(x.days/365.25,2) for x in ddd]
+st.write(curve_bonds[['rus_long','issue_date','maturity_date','years_to_mat']])    
