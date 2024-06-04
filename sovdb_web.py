@@ -54,6 +54,7 @@ mymap = ['#0051CA', '#F8AC27', '#3F863F', '#C6DBA1', '#FDD65F', '#FBEEBD', '#507
 cols=st.columns(4)
 with cols[0]:
     st.write("Available data: [link](https://docs.google.com/spreadsheets/d/15xyVYbzi04rBfxX4c9wfemcV-BD0pjvb6oCO-2KPGnM/edit#gid=0)")
+    st.write("Test")
 with cols[1]:
     st.write("Countries shorts: [link](https://docs.google.com/spreadsheets/d/1G1nJ0Nyp9nkj5znIAx0dcB3-nZsiXiyPDAvqMZvrC9E/edit?usp=sharing)")
 
