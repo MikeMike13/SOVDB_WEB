@@ -62,12 +62,14 @@ with cols[0]:
     #st.write(all_bonds[all_bonds['is_matured']==False]['rus_short'])
     country = st.selectbox("Country: ",(['Russia','United States','Kazakhstan','Belarus','Kyrgyzstan']), index=0)
     all_bonds = all_bonds0[all_bonds0['Country']==country]
+    #st.write(all_bonds)
     #ticker      = temp['id'].array[0]
     #%ticker_isin = temp['isin'].array[0]    
 with cols[1]:
     #st.write(all_bonds[all_bonds['is_matured']==False]['rus_short'])
     ticker0 = st.selectbox("Choose bond: ",(all_bonds['rus_short'].sort_values()), index=0)
-    temp = all_bonds[all_bonds['rus_short']==ticker0]
+    
+    temp = all_bonds[all_bonds['rus_short']==ticker0]    
     ticker      = temp['id'].array[0]
     ticker_isin = temp['isin'].array[0]    
 with cols[2]:
