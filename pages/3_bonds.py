@@ -60,7 +60,7 @@ all_bonds0 = all_bonds[all_bonds['is_matured']==False]
 cols=st.columns(4)
 with cols[0]:
     #st.write(all_bonds[all_bonds['is_matured']==False]['rus_short'])
-    country = st.selectbox("Country: ",(['Russia','United States','Kazakhstan']), index=0)
+    country = st.selectbox("Country: ",(['Russia','United States','Kazakhstan','Belarus','Kyrgyzstan']), index=0)
     all_bonds = all_bonds0[all_bonds0['Country']==country]
     #ticker      = temp['id'].array[0]
     #%ticker_isin = temp['isin'].array[0]    
