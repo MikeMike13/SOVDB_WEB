@@ -7,6 +7,8 @@ from io import BytesIO
 from datetime import datetime
 import io
 import matplotlib
+from sklearn.linear_model import LinearRegression
+from numpy import inf
 
 st.set_page_config(layout="centered")
 
@@ -96,7 +98,7 @@ with cols[1]:
     peers = st.selectbox("Peers",peers, index=0)
 
     
-cols=st.columns(5)
+cols=st.columns(6)
 with cols[0]:
     labls = st.checkbox('all peers labels',0) 
 with cols[1]:
@@ -106,7 +108,20 @@ with cols[2]:
 with cols[3]:
     y_x = st.checkbox('y=x',0) 
 with cols[4]:
+    y_trnd = st.checkbox('trend',0) 
+with cols[5]:
     all_peers = st.selectbox("All peers",("WEO","EM","DM","All"), index=0)
+    
+cols=st.columns(4)
+with cols[0]:
+    xmin = st.number_input('x min:',format="%.1f",step=0.1)
+with cols[1]:
+    xmax = st.number_input('x max:',format="%.1f",step=0.1)
+with cols[2]:
+    ymin = st.number_input('y min',format="%.1f",step=0.1) 
+with cols[3]:
+    ymax = st.number_input('y max',format="%.1f",step=0.1)
+
     
 plot_type = st.selectbox("Choose plot type",("","1. Scatter: 2 indicators 1 date (end)",\
                                              "2. Scatter: 1 indicator (x) 2 dates",\
@@ -235,6 +250,7 @@ if plot_type=="1. Scatter: 2 indicators 1 date (end)":
     
     fig, ax = plt.subplots()           
     if log_x:
+        #st.write(data_x)
         data_x = np.log(data_x)
         data_x_sm = np.log(data_x_sm)
         data_x_cn = np.log(data_x_cn)
@@ -245,7 +261,7 @@ if plot_type=="1. Scatter: 2 indicators 1 date (end)":
         data_y_cn = np.log(data_y_cn)
         suffix_y = ", log"
 
-    ticker_x0        
+    #ticker_x0        
     #x_label = indic_x_eng+suffix_x
     x_label = ticker_x0+suffix_x
     #y_label = indic_y_eng+suffix_y
@@ -259,12 +275,25 @@ if plot_type=="1. Scatter: 2 indicators 1 date (end)":
     ax.scatter(data_x_sm,data_y_sm,color=mymap[0], s=10)
     #selected country
     ax.scatter(data_x_cn,data_y_cn,color=mymap[1], s=10)
+    
     if y_x:
         xpoints = ypoints = ax.get_xlim()
-        ax.plot(xpoints, ypoints, linestyle='--', color='r', lw=1, scalex=False, scaley=False)
+        ax.plot(xpoints, ypoints, linestyle='--', color='r', lw=1, scalex=False, scaley=False)        
+    
+    if y_trnd:        
+        model = LinearRegression()        
+        data_x[np.isneginf(data_x)] = 0
+        model.fit(data_x.reshape(-1, 1), np.array(data_y))
+        b = model.intercept_
+        k = model.coef_
         
-    ax.set_xlabel(x_label)
-    ax.set_ylabel(y_label)
+        x_new = np.arange(np.min(data_x),  np.max(data_x), 0.01)
+        y_new = k*x_new+b
+        ax.plot(x_new,y_new)
+        
+        ax.set_xlabel(x_label)
+        ax.set_ylabel(y_label)
+        
     if labls:
         for i, txt in enumerate(labels):
             #https://matplotlib.org/stable/gallery/text_labels_and_annotations/text_alignment.html
@@ -275,7 +304,20 @@ if plot_type=="1. Scatter: 2 indicators 1 date (end)":
     ax.annotate(labels_cn[0], (data_x_cn[0], data_y_cn[0]),ha='left', va='bottom', size=8)
         
     plt.title(country_sel+" vs "+peers+" vs "+all_peers+": "+date.strftime('%Y-%m-%d'))
-    plt.show()     
+    plt.show()    
+    plt.ylim((ymin, ymax))
+    plt.xlim((xmin, xmax))
+    cols=st.columns(4)
+    with cols[0]:
+        #st.write(np.min(data_x))
+        st.write("x min: "+str(round(np.min(data_x),2)))
+    with cols[1]:
+        st.write("x max: "+str(round(np.max(data_x),2)))
+    with cols[2]:
+        st.write("y min: "+str(round(np.min(data_y),2)))
+    with cols[3]:
+        st.write("y max: "+str(round(np.max(data_y),2)))
+        
     st.pyplot(fig)
 
 

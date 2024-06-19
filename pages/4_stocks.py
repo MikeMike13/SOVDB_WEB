@@ -88,12 +88,22 @@ df_des = pd.DataFrame(rows,columns=colnames)
 #st.write(df_plot)
 #retruns
 #1W
-ret_1W_abs = (df_prices[-1]-df_prices[-5])
-ret_1W_pct = (df_prices[-1]/df_prices[-5]-1)*100
+if (df_prices.size>=5):
+    ret_1W_abs = (df_prices[-1]-df_prices[-5])
+    ret_1W_pct = (df_prices[-1]/df_prices[-5]-1)*100
+else:
+    ret_1W_abs = 0
+    ret_1W_pct = 0
+    
 #MTD
 df_m = df_prices.resample('M').last()
-ret_MTD_abs = (df_prices[-1]-df_m[-2])
-ret_MTD_pct = (df_prices[-1]/df_m[-2]-1)*100
+if (df_m.size>=2):
+    ret_MTD_abs = (df_prices[-1]-df_m[-2])
+    ret_MTD_pct = (df_prices[-1]/df_m[-2]-1)*100
+else:
+    ret_MTD_abs = 0
+    ret_MTD_pct = 0
+    
 #YTD
 df_y = df_prices.resample('Y').last()
 
@@ -152,7 +162,7 @@ st.pyplot(fig)
 
 ###VS PEER
 st.write('Choose peer')
-cols=st.columns(2)
+cols ==st.columns(2)
 with cols[0]:
     is_stock = st.checkbox('use stock', 0) 
     df = df.rename(columns={"Close": ticker0+"_Price", "Volume": ticker0+"_Vol"})
