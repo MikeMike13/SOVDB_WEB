@@ -20,7 +20,7 @@ conn = ps.connect(database = "sovdb",
 mymap = ['#0051CA', '#F8AC27', '#3F863F', '#C6DBA1', '#FDD65F', '#FBEEBD', '#50766E'];
 
 def sovdb_read(ticker, date):
-    query = "SELECT * FROM sovdb_schema.\""+ticker+"\" WHERE \"""Date\""">='"+date.strftime('%Y-%m-%d')+"'"    
+    query = "SELECT * FROM sovdb_schema.\""+ticker+"\" WHERE \"""Date\""">='"+date.strftime('%Y-%m-%d')+"' ORDER by \"""Date\""""    
     cur = conn.cursor()
     cur.execute(query);
     rows = cur.fetchall()
