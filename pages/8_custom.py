@@ -205,12 +205,12 @@ with cols[1]:
     
 #COMMOD
 date_st_c = st.date_input("Start: ", pd.to_datetime('2022-12-29'))
-df_com = sovdb_read("CMDT_OILBRENT_CBONDS", date_st_c)     
+df_com = sovdb_read("CMDT_OILURALS_CBONDS", date_st_c)     
 field = "Value"
 fig, ax = plt.subplots()    
 line, = ax.plot(df_com)
 ax.text(df_com[field].index[-1], df_com[field][-1], round(df_com[field][-1],2), fontsize=8,color=mymap[0]);#
-plt.title("Brent, "+str(df_com[field].index[-1]))
+plt.title("Urals, "+str(df_com[field].index[-1]))
 ax.axvline(x=datetime(date.today().year-1, 12, 31), color = mymap[0],linestyle='--') 
 formatter = matplotlib.dates.DateFormatter('%Y')
 ax.xaxis.set_major_formatter(formatter)
@@ -236,6 +236,6 @@ with cols[0]:
     download2 = st.download_button(
         label="Excel",
         data=buffer,
-        file_name="Brent.xlsx",
+        file_name="Urals.xlsx",
         mime='application/vnd.ms-excel'
     )
