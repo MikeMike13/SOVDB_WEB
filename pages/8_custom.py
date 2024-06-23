@@ -140,13 +140,12 @@ peers_sm_key = "PP_"+peers
 df = sovdb_read_gen(peers_sm_key)
 peers_s_keys = df.m_key 
 
-match indicator:
-    case "LCUSD":
-        ticker_suff = "_LCUSD_D"
-        title_name = "LCUSD, norm"
-    case "Key rate":
-        ticker_suff = "_KEYRATE_D"
-        title_name = "Key rates"
+if indicator == "LCUSD":
+    ticker_suff = "_LCUSD_D"
+    title_name = "LCUSD, norm"
+if indicator == "Key rate":
+    ticker_suff = "_KEYRATE_D"
+    title_name = "Key rates"
     
 
 for key in peers_s_keys:
