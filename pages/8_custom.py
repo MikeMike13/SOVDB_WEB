@@ -216,3 +216,26 @@ formatter = matplotlib.dates.DateFormatter('%Y')
 ax.xaxis.set_major_formatter(formatter)
 plt.show()     
 st.pyplot(fig)
+
+cols = st.columns(6)
+#with cols[0]: 
+    #fn="PEERS-"+peers+"-indic-"+indicator+".png"
+    #plt.savefig(fn)
+    #with open(fn, "rb") as img:
+    #    btn = st.download_button(
+    #        label="JPG",
+    #        data=img,
+    #        file_name=fn,
+    #        mime="image/png"
+    #    )
+        
+with cols[0]:     
+    buffer = io.BytesIO()
+    with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:    
+        df_com.to_excel(writer, sheet_name='Sheet1', index=True)    
+    download2 = st.download_button(
+        label="Excel",
+        data=buffer,
+        file_name="Brent.xlsx",
+        mime='application/vnd.ms-excel'
+    )
