@@ -57,7 +57,7 @@ all_bonds = sovdb_read_gen('bonds')
 #st.write(all_bonds)
 all_bonds0 = all_bonds[all_bonds['is_matured']==False]
 
-cols=st.columns(4)
+cols=st.columns(3)
 with cols[0]:
     #st.write(all_bonds[all_bonds['is_matured']==False]['rus_short'])
     country = st.selectbox("Country: ",(['Russia','United States','Kazakhstan','Belarus','Kyrgyzstan']), index=0)
@@ -66,15 +66,23 @@ with cols[0]:
     #ticker      = temp['id'].array[0]
     #%ticker_isin = temp['isin'].array[0]    
 with cols[1]:
-    #st.write(all_bonds[all_bonds['is_matured']==False]['rus_short'])
-    ticker0 = st.selectbox("Choose bond: ",(all_bonds['rus_short'].sort_values()), index=0)
-    
-    temp = all_bonds[all_bonds['rus_short']==ticker0]    
-    ticker      = temp['id'].array[0]
-    ticker_isin = temp['isin'].array[0]    
+    has_pr = st.checkbox('with prices',1) 
+    all_bonds = all_bonds[all_bonds0['has_prices']==has_pr]
 with cols[2]:
+    issuer = st.selectbox("Issuer: ",(['Россия','Башкоркостан']), index=0)
+    #all_bonds = all_bonds[all_bonds0['has_prices']==has_pr]
+    
+
+ticker0 = st.selectbox("Choose bond: ",(all_bonds['rus_short'].sort_values()), index=0)
+
+temp = all_bonds[all_bonds['rus_short']==ticker0]    
+ticker      = temp['id'].array[0]
+ticker_isin = temp['isin'].array[0]    
+
+cols=st.columns(2)
+with cols[0]:
     date = st.date_input("Date: ", pd.to_datetime('2022-01-01'))  
-with cols[3]:
+with cols[1]:
     field0 = st.selectbox("plot",("Yield_Close","Price_Close"), index=0)        
 
 #get data for selected bond
@@ -107,172 +115,174 @@ with cols[3]:
     else:
         years = (df_des.maturity_date.values[0] - date.today()).days/365.25
         years_mat = st.write("years to mat: "+str(round(years,2))+"Y")
-with cols[4]:    
-    ticker_dur = df0['Duration'].values[-1]/365.25
-    st.write("dur: "+str(round(ticker_dur,1)))
+with cols[4]:   
+    if has_pr:
+        ticker_dur = df0['Duration'].values[-1]/365.25
+        st.write("dur: "+str(round(ticker_dur,1)))
     
-#plot selected bond    
-fig, ax = plt.subplots()
-Lastdate = df[field].index[-1].strftime('%Y-%m-%d')
-ax.plot(df[field], color=mymap[0], label='d',linewidth=0.8) 
-ax.text(df[field].index[-1], df[field][-1], round(df[field][-1],2), fontsize=8,color=mymap[0]);#
-ax2 = ax.twinx()
-ax2.bar(df.index,df[field_vol]/1000, color=mymap[1]) 
-
-plt.title(ticker0+", "+Lastdate) 
-formatter = matplotlib.dates.DateFormatter('%Y')
-ax.xaxis.set_major_formatter(formatter)
-plt.show() 
-st.pyplot(fig)
-
-cols=st.columns(2)
-with cols[0]:
-    fig, ax = plt.subplots()
-    ax.scatter(df[ticker+"_Yield_Close"],df[ticker+"_Price_Close"],color=mymap[0], s=10,alpha=0.5)
-    ax.scatter(df[ticker+"_Yield_Close"][-1],df[ticker+"_Price_Close"][-1],color=(1,0,0), s=10)
-    ax.set_xlabel('yield')
-    ax.set_ylabel('price')
-    plt.show() 
-    st.pyplot(fig)    
-with cols[1]:
-    last_n_days = 20
-    model = LinearRegression()
-    x = np.array(df[ticker+"_Yield_Close"].tail(last_n_days).values.tolist()).reshape((-1, 1))
-    y = np.array(df[ticker+"_Price_Close"].tail(last_n_days).values.tolist())
-    model.fit(x, y)
-    b = model.intercept_
-    k = model.coef_
-    
-    x_new = np.arange(np.min(x),  np.max(x), 0.01)
-    y_new = k*x_new+b
-    
-    
-    fig, ax = plt.subplots()
-    ax.scatter(df[ticker+"_Yield_Close"].tail(last_n_days),df[ticker+"_Price_Close"].tail(last_n_days),color=mymap[0], s=10,alpha=0.5)
-    ax.scatter(df[ticker+"_Yield_Close"][-1],df[ticker+"_Price_Close"][-1],color=(1,0,0), s=10)
-    ax.text(df[ticker+"_Yield_Close"][-1],df[ticker+"_Price_Close"][-1],str(round(k[0],2)))
-    ax.plot(x_new,y_new)
-    ax.set_xlabel('yield')
-    ax.set_ylabel('price')
-    plt.show() 
-    st.pyplot(fig) 
-
-cols=st.columns(2)
-with cols[0]:
-    #st.write(all_bonds[all_bonds['is_matured']==False]['rus_short'])
-    country_peer = st.selectbox("Country : ",(['Russia','United States','Kazakhstan']), index=0)
-    all_bonds = all_bonds0[all_bonds0['Country']==country_peer]
-    #ticker      = temp['id'].array[0]
-    #%ticker_isin = temp['isin'].array[0]    
-with cols[1]:
-    #st.write(all_bonds[all_bonds['is_matured']==False]['rus_short'])
-    #ticker0 = st.selectbox("Choose bond: ",(all_bonds['rus_short'].sort_values()), index=0)
-    #temp = all_bonds[all_bonds['rus_short']==ticker0]
-    #ticker      = temp['id'].array[0]
-    #ticker_isin = temp['isin'].array[0]    
-    
-    ticker0_vs = st.selectbox("choose peer",(all_bonds['rus_short'].sort_values(ascending=True)), index=1)  
-    temp = all_bonds[all_bonds['rus_short']==ticker0_vs]
-    ticker_peer      = temp['id'].array[0]
-    ticker_isin_peer = temp['isin'].array[0]
-
-df_peer = sovdb_read(ticker_peer,date)
-df_peer = df_peer[['Price_Close','Yield_Close','Volume']]
-df_peer = df_peer.rename(columns={"Price_Close": ticker_peer+"_Price_Close", "Yield_Close": ticker_peer+"_Yield_Close", "Volume": ticker_peer+"_Vol"})
-df_all = pd.concat([df, df_peer],axis=1, join="inner")  
-df_all['Spread'] = (df_all[ticker+"_Yield_Close"] - df_all[ticker_peer+"_Yield_Close"])*100
-field_peer = ticker_peer+"_"+field0
-field_vol_peer = ticker_peer+"_Vol"
-
-df_all[ticker+"_Price_Close_norm"] = 100*(df_all[ticker+"_Price_Close"] / df_all[ticker+"_Price_Close"].iloc[0])
-df_all[ticker_peer+"_Price_Close_norm"] = 100*(df_all[ticker_peer+"_Price_Close"] / df_all[ticker_peer+"_Price_Close"].iloc[0])
-
-cols=st.columns(2)
-with cols[0]:
+if has_pr:
+    #plot selected bond    
     fig, ax = plt.subplots()
     Lastdate = df[field].index[-1].strftime('%Y-%m-%d')
-    ax.plot(df_all[field], color=mymap[0], label=ticker0,linewidth=0.8) 
-    ax.text(df_all[field].index[-1], df_all[field][-1], round(df_all[field][-1],2), fontsize=8,color=mymap[0]);#
+    ax.plot(df[field], color=mymap[0], label='d',linewidth=0.8) 
+    ax.text(df[field].index[-1], df[field][-1], round(df[field][-1],2), fontsize=8,color=mymap[0]);#
+    ax2 = ax.twinx()
+    ax2.bar(df.index,df[field_vol]/1000, color=mymap[1]) 
     
-    ax.plot(df_all[field_peer], color=mymap[1], label=ticker0_vs,linewidth=0.8) 
-    ax.text(df_all[field_peer].index[-1], df_all[field_peer][-1], round(df_all[field_peer][-1],2), fontsize=8,color=mymap[1]);#
-
-    plt.title("Yields: "+ticker0+" vs "+ticker0_vs+", "+Lastdate) 
+    plt.title(ticker0+", "+Lastdate) 
     formatter = matplotlib.dates.DateFormatter('%Y')
     ax.xaxis.set_major_formatter(formatter)
-    plt.legend()
     plt.show() 
     st.pyplot(fig)
-with cols[1]:
-    fig, ax = plt.subplots()
-    Lastdate = df[field].index[-1].strftime('%Y-%m-%d')
-    ax.fill_between(df_all.index,df_all['Spread'], color=mymap[0], label='Spread',linewidth=0.8) 
-    ax.text(df_all['Spread'].index[-1], df_all['Spread'][-1], round(df_all['Spread'][-1],0), fontsize=8,color=mymap[0]);#
+    
+    cols=st.columns(2)
+    with cols[0]:
+        fig, ax = plt.subplots()
+        ax.scatter(df[ticker+"_Yield_Close"],df[ticker+"_Price_Close"],color=mymap[0], s=10,alpha=0.5)
+        ax.scatter(df[ticker+"_Yield_Close"][-1],df[ticker+"_Price_Close"][-1],color=(1,0,0), s=10)
+        ax.set_xlabel('yield')
+        ax.set_ylabel('price')
+        plt.show() 
+        st.pyplot(fig)    
+    with cols[1]:
+        last_n_days = 20
+        model = LinearRegression()
+        x = np.array(df[ticker+"_Yield_Close"].tail(last_n_days).values.tolist()).reshape((-1, 1))
+        y = np.array(df[ticker+"_Price_Close"].tail(last_n_days).values.tolist())
+        model.fit(x, y)
+        b = model.intercept_
+        k = model.coef_
         
-    plt.title("Spread: "+ticker0+" vs "+ticker0_vs+", "+Lastdate) 
-    formatter = matplotlib.dates.DateFormatter('%Y')
-    ax.xaxis.set_major_formatter(formatter)
-    plt.legend()
-    plt.show() 
-    st.pyplot(fig)
-
-cols=st.columns(2)
-with cols[0]:
-    fig, ax = plt.subplots()
-    Lastdate = df[field].index[-1].strftime('%Y-%m-%d')
-    ax.plot(df_all[ticker+"_Price_Close"], color=mymap[0], label=ticker0,linewidth=0.8) 
-    ax.text(df_all[ticker+"_Price_Close"].index[-1], df_all[ticker+"_Price_Close"][-1], round(df_all[ticker+"_Price_Close"][-1],2), fontsize=8,color=mymap[0]);#
+        x_new = np.arange(np.min(x),  np.max(x), 0.01)
+        y_new = k*x_new+b
+        
+        
+        fig, ax = plt.subplots()
+        ax.scatter(df[ticker+"_Yield_Close"].tail(last_n_days),df[ticker+"_Price_Close"].tail(last_n_days),color=mymap[0], s=10,alpha=0.5)
+        ax.scatter(df[ticker+"_Yield_Close"][-1],df[ticker+"_Price_Close"][-1],color=(1,0,0), s=10)
+        ax.text(df[ticker+"_Yield_Close"][-1],df[ticker+"_Price_Close"][-1],str(round(k[0],2)))
+        ax.plot(x_new,y_new)
+        ax.set_xlabel('yield')
+        ax.set_ylabel('price')
+        plt.show() 
+        st.pyplot(fig) 
     
-    ax.plot(df_all[ticker_peer+"_Price_Close"], color=mymap[1], label=ticker0_vs,linewidth=0.8) 
-    ax.text(df_all[ticker_peer+"_Price_Close"].index[-1], df_all[ticker_peer+"_Price_Close"][-1], round(df_all[ticker_peer+"_Price_Close"][-1],2), fontsize=8,color=mymap[1]);#
+    cols=st.columns(2)
+    with cols[0]:
+        #st.write(all_bonds[all_bonds['is_matured']==False]['rus_short'])
+        country_peer = st.selectbox("Country : ",(['Russia','United States','Kazakhstan']), index=0)
+        all_bonds = all_bonds0[all_bonds0['Country']==country_peer]
+        #ticker      = temp['id'].array[0]
+        #%ticker_isin = temp['isin'].array[0]    
+    with cols[1]:
+        #st.write(all_bonds[all_bonds['is_matured']==False]['rus_short'])
+        #ticker0 = st.selectbox("Choose bond: ",(all_bonds['rus_short'].sort_values()), index=0)
+        #temp = all_bonds[all_bonds['rus_short']==ticker0]
+        #ticker      = temp['id'].array[0]
+        #ticker_isin = temp['isin'].array[0]    
+        
+        ticker0_vs = st.selectbox("choose peer",(all_bonds['rus_short'].sort_values(ascending=True)), index=1)  
+        temp = all_bonds[all_bonds['rus_short']==ticker0_vs]
+        ticker_peer      = temp['id'].array[0]
+        ticker_isin_peer = temp['isin'].array[0]
     
-    plt.title("Prices: "+ticker0+" vs "+ticker0_vs+", "+Lastdate) 
-    formatter = matplotlib.dates.DateFormatter('%Y')
-    ax.xaxis.set_major_formatter(formatter)
-    plt.legend()
-    plt.show() 
-    st.pyplot(fig)
+    df_peer = sovdb_read(ticker_peer,date)
+    df_peer = df_peer[['Price_Close','Yield_Close','Volume']]
+    df_peer = df_peer.rename(columns={"Price_Close": ticker_peer+"_Price_Close", "Yield_Close": ticker_peer+"_Yield_Close", "Volume": ticker_peer+"_Vol"})
+    df_all = pd.concat([df, df_peer],axis=1, join="inner")  
+    df_all['Spread'] = (df_all[ticker+"_Yield_Close"] - df_all[ticker_peer+"_Yield_Close"])*100
+    field_peer = ticker_peer+"_"+field0
+    field_vol_peer = ticker_peer+"_Vol"
     
-with cols[1]:
-    fig, ax = plt.subplots()
-    Lastdate = df[field].index[-1].strftime('%Y-%m-%d')
-    ax.plot(df_all[ticker+"_Price_Close_norm"], color=mymap[0], label=ticker0,linewidth=0.8) 
-    ax.text(df_all[ticker+"_Price_Close_norm"].index[-1], df_all[ticker+"_Price_Close_norm"][-1], round(df_all[ticker+"_Price_Close_norm"][-1],2), fontsize=8,color=mymap[0]);#
+    df_all[ticker+"_Price_Close_norm"] = 100*(df_all[ticker+"_Price_Close"] / df_all[ticker+"_Price_Close"].iloc[0])
+    df_all[ticker_peer+"_Price_Close_norm"] = 100*(df_all[ticker_peer+"_Price_Close"] / df_all[ticker_peer+"_Price_Close"].iloc[0])
     
-    ax.plot(df_all[ticker_peer+"_Price_Close_norm"], color=mymap[1], label=ticker0_vs,linewidth=0.8) 
-    ax.text(df_all[ticker_peer+"_Price_Close_norm"].index[-1], df_all[ticker_peer+"_Price_Close_norm"][-1], round(df_all[ticker_peer+"_Price_Close_norm"][-1],2), fontsize=8,color=mymap[1]);#
-    ax.axhline(100, color=(0.45,0.45,0.45))
-    plt.title("Prices norm: "+ticker0+" vs "+ticker0_vs+", "+Lastdate) 
-    formatter = matplotlib.dates.DateFormatter('%Y')
-    ax.xaxis.set_major_formatter(formatter)
-    plt.legend()
-    plt.show() 
-    st.pyplot(fig)
+    cols=st.columns(2)
+    with cols[0]:
+        fig, ax = plt.subplots()
+        Lastdate = df[field].index[-1].strftime('%Y-%m-%d')
+        ax.plot(df_all[field], color=mymap[0], label=ticker0,linewidth=0.8) 
+        ax.text(df_all[field].index[-1], df_all[field][-1], round(df_all[field][-1],2), fontsize=8,color=mymap[0]);#
+        
+        ax.plot(df_all[field_peer], color=mymap[1], label=ticker0_vs,linewidth=0.8) 
+        ax.text(df_all[field_peer].index[-1], df_all[field_peer][-1], round(df_all[field_peer][-1],2), fontsize=8,color=mymap[1]);#
     
-cols=st.columns(2)
-with cols[0]:
-    ticker_vol_mean = df_all[field_vol].mean()/1000
-    ticker_vol_peer_mean = df_all[field_vol_peer].mean()/1000
-    ticker_vol_x = ticker_vol_mean/ticker_vol_peer_mean
+        plt.title("Yields: "+ticker0+" vs "+ticker0_vs+", "+Lastdate) 
+        formatter = matplotlib.dates.DateFormatter('%Y')
+        ax.xaxis.set_major_formatter(formatter)
+        plt.legend()
+        plt.show() 
+        st.pyplot(fig)
+    with cols[1]:
+        fig, ax = plt.subplots()
+        Lastdate = df[field].index[-1].strftime('%Y-%m-%d')
+        ax.fill_between(df_all.index,df_all['Spread'], color=mymap[0], label='Spread',linewidth=0.8) 
+        ax.text(df_all['Spread'].index[-1], df_all['Spread'][-1], round(df_all['Spread'][-1],0), fontsize=8,color=mymap[0]);#
+            
+        plt.title("Spread: "+ticker0+" vs "+ticker0_vs+", "+Lastdate) 
+        formatter = matplotlib.dates.DateFormatter('%Y')
+        ax.xaxis.set_major_formatter(formatter)
+        plt.legend()
+        plt.show() 
+        st.pyplot(fig)
     
-    ticker_vol_mean_1M = df_all[field_vol].tail(20).mean()/1000
-    ticker_vol_peer_mean_1M = df_all[field_vol_peer].tail(20).mean()/1000
-    ticker_vol_x_1M = ticker_vol_mean_1M/ticker_vol_peer_mean_1M
-
+    cols=st.columns(2)
+    with cols[0]:
+        fig, ax = plt.subplots()
+        Lastdate = df[field].index[-1].strftime('%Y-%m-%d')
+        ax.plot(df_all[ticker+"_Price_Close"], color=mymap[0], label=ticker0,linewidth=0.8) 
+        ax.text(df_all[ticker+"_Price_Close"].index[-1], df_all[ticker+"_Price_Close"][-1], round(df_all[ticker+"_Price_Close"][-1],2), fontsize=8,color=mymap[0]);#
+        
+        ax.plot(df_all[ticker_peer+"_Price_Close"], color=mymap[1], label=ticker0_vs,linewidth=0.8) 
+        ax.text(df_all[ticker_peer+"_Price_Close"].index[-1], df_all[ticker_peer+"_Price_Close"][-1], round(df_all[ticker_peer+"_Price_Close"][-1],2), fontsize=8,color=mymap[1]);#
+        
+        plt.title("Prices: "+ticker0+" vs "+ticker0_vs+", "+Lastdate) 
+        formatter = matplotlib.dates.DateFormatter('%Y')
+        ax.xaxis.set_major_formatter(formatter)
+        plt.legend()
+        plt.show() 
+        st.pyplot(fig)
+        
+    with cols[1]:
+        fig, ax = plt.subplots()
+        Lastdate = df[field].index[-1].strftime('%Y-%m-%d')
+        ax.plot(df_all[ticker+"_Price_Close_norm"], color=mymap[0], label=ticker0,linewidth=0.8) 
+        ax.text(df_all[ticker+"_Price_Close_norm"].index[-1], df_all[ticker+"_Price_Close_norm"][-1], round(df_all[ticker+"_Price_Close_norm"][-1],2), fontsize=8,color=mymap[0]);#
+        
+        ax.plot(df_all[ticker_peer+"_Price_Close_norm"], color=mymap[1], label=ticker0_vs,linewidth=0.8) 
+        ax.text(df_all[ticker_peer+"_Price_Close_norm"].index[-1], df_all[ticker_peer+"_Price_Close_norm"][-1], round(df_all[ticker_peer+"_Price_Close_norm"][-1],2), fontsize=8,color=mymap[1]);#
+        ax.axhline(100, color=(0.45,0.45,0.45))
+        plt.title("Prices norm: "+ticker0+" vs "+ticker0_vs+", "+Lastdate) 
+        formatter = matplotlib.dates.DateFormatter('%Y')
+        ax.xaxis.set_major_formatter(formatter)
+        plt.legend()
+        plt.show() 
+        st.pyplot(fig)
+        
+    cols=st.columns(2)
+    with cols[0]:
+        ticker_vol_mean = df_all[field_vol].mean()/1000
+        ticker_vol_peer_mean = df_all[field_vol_peer].mean()/1000
+        ticker_vol_x = ticker_vol_mean/ticker_vol_peer_mean
+        
+        ticker_vol_mean_1M = df_all[field_vol].tail(20).mean()/1000
+        ticker_vol_peer_mean_1M = df_all[field_vol_peer].tail(20).mean()/1000
+        ticker_vol_x_1M = ticker_vol_mean_1M/ticker_vol_peer_mean_1M
     
-    fig, ax = plt.subplots()
-    Lastdate = df_all[field].index[-1].strftime('%Y-%m-%d')
-    ax.bar(df_all.index,df_all[field_vol]/1000, color=mymap[1],label=ticker0+": "+str(round(ticker_vol_mean,1))+" (1M "+str(round(ticker_vol_mean_1M,1))+")") 
-    ax.bar(df_all.index,df_all[field_vol_peer]/1000, color=mymap[2], label=ticker0_vs+": "+str(round(ticker_vol_peer_mean,1))+" (1M "+str(round(ticker_vol_peer_mean_1M,1))+")") 
-    ax.axhline(ticker_vol_mean, color=mymap[1])
-    ax.axhline(ticker_vol_peer_mean, color=mymap[2])
-
-    plt.title(ticker0+" vs "+ticker0_vs+", ("+str(round(ticker_vol_x,3))+"x/"+str(round(ticker_vol_x_1M,3))+"x) "+Lastdate) 
-    formatter = matplotlib.dates.DateFormatter('%Y')
-    ax.xaxis.set_major_formatter(formatter)
-    plt.legend()
-    plt.show() 
-    st.pyplot(fig)
+        
+        fig, ax = plt.subplots()
+        Lastdate = df_all[field].index[-1].strftime('%Y-%m-%d')
+        ax.bar(df_all.index,df_all[field_vol]/1000, color=mymap[1],label=ticker0+": "+str(round(ticker_vol_mean,1))+" (1M "+str(round(ticker_vol_mean_1M,1))+")") 
+        ax.bar(df_all.index,df_all[field_vol_peer]/1000, color=mymap[2], label=ticker0_vs+": "+str(round(ticker_vol_peer_mean,1))+" (1M "+str(round(ticker_vol_peer_mean_1M,1))+")") 
+        ax.axhline(ticker_vol_mean, color=mymap[1])
+        ax.axhline(ticker_vol_peer_mean, color=mymap[2])
+    
+        plt.title(ticker0+" vs "+ticker0_vs+", ("+str(round(ticker_vol_x,3))+"x/"+str(round(ticker_vol_x_1M,3))+"x) "+Lastdate) 
+        formatter = matplotlib.dates.DateFormatter('%Y')
+        ax.xaxis.set_major_formatter(formatter)
+        plt.legend()
+        plt.show() 
+        st.pyplot(fig)
     
 # =============================================================================
 # st.write('All bonds by duration')
@@ -343,54 +353,54 @@ end_value_interploated = BSpline(*end_spline)(end_xnew)
 
 #selected bond
 #st.write(st_values_b)
+if has_pr:
+    dt_st_b = (df_des.maturity_date.values[0] - curve_date_st).days/365.25
+    dt_end_b = (df_des.maturity_date.values[0] - curve_date_end).days/365.25
+    
+    st_values_b = df[df.index==curve_date_st.strftime('%Y-%m-%d')]
+    st_values_b = st_values_b[ticker+"_Yield_Close"].values[0]
+    st_spread_b = (st_values_b - BSpline(*st_spline)(dt_st_b))*100
+    
+    
+    end_values_b = df[df.index==curve_date_end.strftime('%Y-%m-%d')]
+    end_values_b = end_values_b[ticker+"_Yield_Close"].values[0]
+    end_spread_b = (end_values_b - BSpline(*end_spline)(dt_end_b)  )*100
+    
+    fig, ax = plt.subplots()
+    ax.scatter(dt_st,st_values,color=mymap[0], label=curve_date_st.strftime('%Y-%m-%d'),s=10)
+    ax.scatter(dt_st_b,st_values_b,color=mymap[0], label=ticker0+": "+curve_date_st.strftime('%Y-%m-%d'),s=10,marker='^')
+    ax.plot(st_xnew, st_value_interploated, '-',color=mymap[0])
+    ax.text(dt_st_b,st_values_b, str(round(st_spread_b,1)),color=mymap[0])
+    
+    ax.scatter(dt_end,end_values,color=mymap[1], label=curve_date_end.strftime('%Y-%m-%d'), s=10)
+    ax.scatter(dt_end_b,end_values_b,color=mymap[1], label=ticker0+": "+curve_date_st.strftime('%Y-%m-%d'),s=10,marker='^')
+    ax.plot(end_xnew, end_value_interploated, '-',color=mymap[1])
+    ax.text(dt_end_b,end_values_b, str(round(end_spread_b,1)),color=mymap[1])
+    
+    ax.set_xlabel('years to maturity')
+    ax.set_ylabel('yield')
+    plt.legend()
+    plt.title('Yield curve')
+    plt.show() 
+    st.pyplot(fig) 
 
-dt_st_b = (df_des.maturity_date.values[0] - curve_date_st).days/365.25
-dt_end_b = (df_des.maturity_date.values[0] - curve_date_end).days/365.25
-
-st_values_b = df[df.index==curve_date_st.strftime('%Y-%m-%d')]
-st_values_b = st_values_b[ticker+"_Yield_Close"].values[0]
-st_spread_b = (st_values_b - BSpline(*st_spline)(dt_st_b))*100
-
-
-end_values_b = df[df.index==curve_date_end.strftime('%Y-%m-%d')]
-end_values_b = end_values_b[ticker+"_Yield_Close"].values[0]
-end_spread_b = (end_values_b - BSpline(*end_spline)(dt_end_b)  )*100
-
-fig, ax = plt.subplots()
-ax.scatter(dt_st,st_values,color=mymap[0], label=curve_date_st.strftime('%Y-%m-%d'),s=10)
-ax.scatter(dt_st_b,st_values_b,color=mymap[0], label=ticker0+": "+curve_date_st.strftime('%Y-%m-%d'),s=10,marker='^')
-ax.plot(st_xnew, st_value_interploated, '-',color=mymap[0])
-ax.text(dt_st_b,st_values_b, str(round(st_spread_b,1)),color=mymap[0])
-
-ax.scatter(dt_end,end_values,color=mymap[1], label=curve_date_end.strftime('%Y-%m-%d'), s=10)
-ax.scatter(dt_end_b,end_values_b,color=mymap[1], label=ticker0+": "+curve_date_st.strftime('%Y-%m-%d'),s=10,marker='^')
-ax.plot(end_xnew, end_value_interploated, '-',color=mymap[1])
-ax.text(dt_end_b,end_values_b, str(round(end_spread_b,1)),color=mymap[1])
-
-ax.set_xlabel('years to maturity')
-ax.set_ylabel('yield')
-plt.legend()
-plt.title('Yield curve')
-plt.show() 
-st.pyplot(fig) 
-
-list1 = end_values.values.tolist()[0]
-list2 = st_values.values.tolist()[0]
-result = [(a - b)*100 for a, b in zip(list1, list2)]
-
-fig, ax = plt.subplots()
-ax.bar(dt_end,result)
-
-
-ax.set_xlabel('years to maturity')
-ax.set_ylabel('spread, bp')
-plt.legend()
-plt.title('Yield curve shift')
-plt.show() 
-st.pyplot(fig) 
-
-
-curve_bonds = all_bonds[all_bonds['id'].isin(Curve)].sort_values(by=['maturity_date'])
-ddd = (curve_bonds.maturity_date.values - date.today()).tolist()
-curve_bonds['years_to_mat'] =  [round(x.days/365.25,2) for x in ddd]
-st.write(curve_bonds[['rus_long','issue_date','maturity_date','years_to_mat']])    
+    list1 = end_values.values.tolist()[0]
+    list2 = st_values.values.tolist()[0]
+    result = [(a - b)*100 for a, b in zip(list1, list2)]
+    
+    fig, ax = plt.subplots()
+    ax.bar(dt_end,result)
+    
+    
+    ax.set_xlabel('years to maturity')
+    ax.set_ylabel('spread, bp')
+    plt.legend()
+    plt.title('Yield curve shift')
+    plt.show() 
+    st.pyplot(fig) 
+    
+    
+    curve_bonds = all_bonds[all_bonds['id'].isin(Curve)].sort_values(by=['maturity_date'])
+    ddd = (curve_bonds.maturity_date.values - date.today()).tolist()
+    curve_bonds['years_to_mat'] =  [round(x.days/365.25,2) for x in ddd]
+    st.write(curve_bonds[['rus_long','issue_date','maturity_date','years_to_mat']])    

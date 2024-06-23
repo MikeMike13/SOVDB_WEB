@@ -162,7 +162,7 @@ st.pyplot(fig)
 
 ###VS PEER
 st.write('Choose peer')
-cols ==st.columns(2)
+#cols ==st.columns(2)
 with cols[0]:
     is_stock = st.checkbox('use stock', 0) 
     df = df.rename(columns={"Close": ticker0+"_Price", "Volume": ticker0+"_Vol"})
