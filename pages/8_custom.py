@@ -146,7 +146,9 @@ if indicator == "LCUSD":
 if indicator == "Key rate":
     ticker_suff = "_KEYRATE_D"
     title_name = "Key rates"
-    
+if indicator == "CPI":
+    ticker_suff = "_CPI_M_YOY"
+    title_name = "Inflation, yoy"    
 
 for key in peers_s_keys:
     ticker_x = key+ticker_suff
