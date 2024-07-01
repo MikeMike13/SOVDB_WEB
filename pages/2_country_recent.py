@@ -118,35 +118,47 @@ with cols[0]:
          data_2 = sovdb_read(ticker2_sel, short_date)
          data_2 = data_2.rename(columns={"Value": ticker2})         
          df_2 = data_2[ticker2].to_frame()
+
          
-         #st.write(df_2)
-         #df_y = df.resample('Y').last()
-         #YTD_FX = (df_y.values[-1][0]/df_y.values[-2][0]-1)*100
-         
-         p1=ax.plot(df_1, color=mymap[0], linewidth=0.8, label='yoy')          
+         p1, =ax.plot(df_1, color=mymap[0], linewidth=0.8,label='yoy')          
          ax.text(df_1.index[-1], df_1.values[-1][0], round(df_1.values[-1][0],2), fontsize=8,color=mymap[0])#         
          
-         p2=ax2.bar(df_2.index, df_2[ticker2],width=d, color=mymap[1], label='mom, rhs')
+         p2 =ax2.bar(df_2.index, df_2[ticker2],width=d, color=mymap[1],label='mom, rhs')
          ax2.text(df_2.index[-1], df_2.values[-1][0], round(df_2.values[-1][0],2), fontsize=8,color=mymap[1])#  
-         #ax2.bar("",df_2, color=mymap[1], linewidth=0.8)  
-                       
-         #End_val = df.values[-1][0]
-         #Start_val = df_y.values[-2][0]
-         #End_date_c = df.index[-1]
-         #Start_date_c = df_y.index[-2]
-
-         #period_ret = (End_val/Start_val-1)*100
-         #annula_ret = ((1+period_ret/100)**(365.25/(End_date_c - Start_date_c).days)-1)*100
-         #years = (End_date_c - Start_date_c).days/365.25       
-                         
-         #plt.title("Local currency to USD "+str(df.index[-1].strftime('%Y-%m-%d'))+", YTD:"+str(round(YTD_FX,2))+"% (ann:"+str(round(annula_ret,2))+"%)")          
+                  
          plt.title("CPI, "+df_1.index[-1].strftime("%B,%Y"))         
     
          formatter = matplotlib.dates.DateFormatter('%Y')
          ax.xaxis.set_major_formatter(formatter)
-         plt.show() 
-         #p12 = p1+p2
-         #labs = [l.get_label() for l in p12]
-         #ax.legend(p12, labs, loc=4, frameon=False)   
+         plt.show()
+         ax.legend(handles=[p1, p2])  
+         st.pyplot(fig)         
+
+with cols[1]:
+     ticker1 = "CPI_M_INDEX"
+     ticker1_sel = key+"_"+ticker1
+     is_t1 = ticker_exists(ticker1_sel) 
+     
+     
+     if is_t1:
+         fig = plt.figure()
+         ax = fig.add_subplot(1, 1, 1)
+         
+         #indicator1
+         data_1 = sovdb_read(ticker1_sel, short_date)
+         data_1 = data_1.rename(columns={"Value": ticker1})         
+         df_1 = data_1[ticker1].to_frame()
+         
+         #df_1_y = df_1.resample('Y').last()
+         ax.plot(df_1.index[-12], df_1.values[-12][0], marker=5,color=(1,0,0)) 
+         
+       
+         p1, =ax.plot(df_1, color=mymap[0], linewidth=0.8,label='yoy')          
+
+         plt.title("CPI, index "+df_1.index[-1].strftime("%B,%Y"))         
+    
+         formatter = matplotlib.dates.DateFormatter('%Y')
+         ax.xaxis.set_major_formatter(formatter)
+         plt.show()
          st.pyplot(fig)         
  
