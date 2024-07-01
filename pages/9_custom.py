@@ -154,7 +154,8 @@ for key in peers_s_keys:
     ticker_x = key+ticker_suff
     is_x = ticker_exists(ticker_x)
     
-    if is_x:             
+    if is_x:      
+        #st.write(ticker_x)
         df_x = sovdb_read(ticker_x, date_st)                                    
         if df_x.empty:                            
             j=1
