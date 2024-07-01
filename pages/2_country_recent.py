@@ -125,7 +125,8 @@ with cols[0]:
          
          p2 =ax2.bar(df_2.index, df_2[ticker2],width=d, color=mymap[1],label='mom, rhs')
          ax2.text(df_2.index[-1], df_2.values[-1][0], round(df_2.values[-1][0],2), fontsize=8,color=mymap[1])#  
-                  
+         ax2.axvline(x=df_2.index[-12]-timedelta(days=15), color = mymap[1],linestyle='--')
+         
          plt.title("CPI, "+df_1.index[-1].strftime("%B,%Y"))         
     
          formatter = matplotlib.dates.DateFormatter('%Y')
@@ -150,7 +151,8 @@ with cols[1]:
          df_1 = data_1[ticker1].to_frame()
          
          #df_1_y = df_1.resample('Y').last()
-         ax.plot(df_1.index[-12], df_1.values[-12][0], marker=5,color=(1,0,0)) 
+         #st.write(df_1.values[-12][0])
+         ax.plot(df_1.index[-13], df_1.values[-13][0], marker=5,color=(1,0,0)) 
          
        
          p1, =ax.plot(df_1, color=mymap[0], linewidth=0.8,label='yoy')          
