@@ -210,7 +210,8 @@ with cols[0]:
          ax.xaxis.set_major_formatter(formatter)
          plt.show()
          ax.legend(handles=[p1, p2])  
-         st.pyplot(fig)         
+         st.pyplot(fig)    
+         #st.
 
 with cols[1]:
      ticker1 = "UNEMPL_M"
