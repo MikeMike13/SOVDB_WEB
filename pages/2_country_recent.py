@@ -104,22 +104,26 @@ with cols[0]:
      is_t2 = ticker_exists(ticker2_sel) 
      
      
-     if is_t1  & is_t1:
+     if is_t1 & is_t2:
          fig = plt.figure()
          ax = fig.add_subplot(1, 1, 1)
          
          #indicator1
-         data_1 = sovdb_read(ticker1_sel, short_date)
-         data_1 = data_1.rename(columns={"Value": ticker1})         
-         df_1 = data_1[ticker1].to_frame()
+         macro_data = sovdb_read(ticker1_sel, short_date)
+         macro_data = macro_data.rename(columns={"Value": ticker1})         
+         df_1 = macro_data[ticker1].to_frame()
          
          ax2 = ax.twinx()
-         #indicator2
-         data_2 = sovdb_read(ticker2_sel, short_date)
-         data_2 = data_2.rename(columns={"Value": ticker2})         
-         df_2 = data_2[ticker2].to_frame()
+         #indicator2                  
+         temp = sovdb_read(ticker2_sel, short_date)
+         temp = temp.rename(columns={"Value": ticker2})    
+         macro_data = macro_data.join(temp, how="outer")
+         df_2 = macro_data[ticker2].to_frame()
 
-         
+        
+         MAVG = np.mean(df_2.values[-3:])
+         MAVG_ANN = ((1+MAVG/100)**12-1)*100    
+         #st.write(((1+np.mean(df_2.values[-3:])/100)**12-1)*100)
          p1, =ax.plot(df_1, color=mymap[0], linewidth=0.8,label='yoy')          
          ax.text(df_1.index[-1], df_1.values[-1][0], round(df_1.values[-1][0],2), fontsize=8,color=mymap[0])#         
          
@@ -127,9 +131,11 @@ with cols[0]:
          ax2.text(df_2.index[-1], df_2.values[-1][0], round(df_2.values[-1][0],2), fontsize=8,color=mymap[1])#  
          ax2.axvline(x=df_2.index[-12]-timedelta(days=15), color = mymap[1],linestyle='--')
          
-         plt.title("CPI, "+df_1.index[-1].strftime("%B,%Y"))         
+         plt.title("3M MA: "+str(round(MAVG,2))+"%, annualaized: "+str(round(MAVG_ANN,1))+"%")         
+         plt.suptitle(countr+". CPI, "+df_1.index[-1].strftime("%B,%Y"))         
+         
     
-         formatter = matplotlib.dates.DateFormatter('%Y')
+         formatter = matplotlib.dates.DateFormatter('%b-%y')
          ax.xaxis.set_major_formatter(formatter)
          plt.show()
          ax.legend(handles=[p1, p2])  
@@ -146,9 +152,10 @@ with cols[1]:
          ax = fig.add_subplot(1, 1, 1)
          
          #indicator1
-         data_1 = sovdb_read(ticker1_sel, short_date)
-         data_1 = data_1.rename(columns={"Value": ticker1})         
-         df_1 = data_1[ticker1].to_frame()
+         temp = sovdb_read(ticker1_sel, short_date)
+         temp = temp.rename(columns={"Value": ticker1})  
+         macro_data = macro_data.join(temp, how="outer")
+         df_1 = macro_data[ticker1].to_frame()
          
          #df_1_y = df_1.resample('Y').last()
          #st.write(df_1.values[-12][0])
@@ -157,10 +164,84 @@ with cols[1]:
        
          p1, =ax.plot(df_1, color=mymap[0], linewidth=0.8,label='yoy')          
 
-         plt.title("CPI, index "+df_1.index[-1].strftime("%B,%Y"))         
+         plt.title(countr+". CPI, index "+df_1.index[-1].strftime("%B,%Y"))         
     
-         formatter = matplotlib.dates.DateFormatter('%Y')
+         formatter = matplotlib.dates.DateFormatter('%b-%y')
          ax.xaxis.set_major_formatter(formatter)
          plt.show()
          st.pyplot(fig)         
  
+cols=st.columns(2)        
+with cols[0]:
+     ticker1 = "EMPL_PERS"
+     ticker1_sel = key+"_"+ticker1
+     is_t1 = ticker_exists(ticker1_sel) 
+ 
+     ticker2 = "UNEMPL_PERS"
+     ticker2_sel = key+"_"+ticker2
+     is_t2 = ticker_exists(ticker2_sel) 
+     
+     
+     if is_t1 & is_t2:
+         fig = plt.figure()
+         ax = fig.add_subplot(1, 1, 1)
+         
+         #indicator1
+         temp = sovdb_read(ticker1_sel, short_date)
+         temp = temp.rename(columns={"Value": ticker1}) 
+         macro_data = macro_data.join(temp, how="outer")
+         df_1 = macro_data[ticker1].to_frame()         
+         
+         ax2 = ax.twinx()
+         #indicator2
+         temp = sovdb_read(ticker2_sel, short_date)
+         temp = temp.rename(columns={"Value": ticker2}) 
+         macro_data = macro_data.join(temp, how="outer")
+         df_2 = macro_data[ticker2].to_frame()
+         
+         p1, =ax.plot(df_1, color=mymap[0], linewidth=0.8,label='employed')          
+         ax.text(df_1.index[-1], df_1.values[-1][0], round(df_1.values[-1][0],1), fontsize=8,color=mymap[0])#         
+         
+         p2, =ax2.plot(df_2, color=mymap[1], linewidth=0.8,label='unemployed, rhs')          
+         ax2.text(df_2.index[-1], df_2.values[-1][0], round(df_2.values[-1][0],1), fontsize=8,color=mymap[1])#  
+         plt.title(countr+". Employment, mln persons, "+df_1.index[-1].strftime("%B,%Y"))                  
+    
+         formatter = matplotlib.dates.DateFormatter('%b-%y')
+         ax.xaxis.set_major_formatter(formatter)
+         plt.show()
+         ax.legend(handles=[p1, p2])  
+         st.pyplot(fig)         
+
+with cols[1]:
+     ticker1 = "UNEMPL_M"
+     ticker1_sel = key+"_"+ticker1
+     is_t1 = ticker_exists(ticker1_sel)  
+          
+     if is_t1:
+         fig = plt.figure()
+         ax = fig.add_subplot(1, 1, 1)         
+         
+         temp = sovdb_read(ticker1_sel, short_date)
+         temp = temp.rename(columns={"Value": ticker1})
+         macro_data = macro_data.join(temp, how="outer")         
+         df_1 = macro_data[ticker1].to_frame()     
+                
+         p1, =ax.plot(df_1, color=mymap[0], linewidth=0.8)          
+         ax.text(df_1.index[-1], df_1.values[-1][0], round(df_1.values[-1][0],1), fontsize=8,color=mymap[0])#         
+         
+         plt.title(countr+". Unemployment rate, "+df_1.index[-1].strftime("%B,%Y"))                  
+    
+         formatter = matplotlib.dates.DateFormatter('%b-%y')
+         ax.xaxis.set_major_formatter(formatter)
+         plt.show()         
+         st.pyplot(fig)  
+
+buffer = io.BytesIO()
+with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:    
+    macro_data.to_excel(writer, sheet_name='Sheet1', index=True)    
+download = st.download_button(
+    label="Excel",
+    data=buffer,
+    file_name=countr+"_recent_macro.xlsx",
+    mime='application/vnd.ms-excel'
+)         
