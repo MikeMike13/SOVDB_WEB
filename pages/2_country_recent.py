@@ -101,86 +101,82 @@ with cols[0]:
  
      ticker2 = "CPI_M_MOM"
      ticker2_sel = key+"_"+ticker2
-     is_t2 = ticker_exists(ticker2_sel) 
+     is_t2 = ticker_exists(ticker2_sel)    
+          
+     fig = plt.figure()
+     ax = fig.add_subplot(1, 1, 1)
      
-     
-     if is_t1 & is_t2:
-         fig = plt.figure()
-         ax = fig.add_subplot(1, 1, 1)
-         
-         #indicator1
+     handles_t = [];
+     if is_t1:
+     #indicator1
          macro_data = sovdb_read(ticker1_sel, short_date)
          macro_data = macro_data.rename(columns={"Value": ticker1})         
          df_1 = macro_data[ticker1].to_frame()
          
-         ax2 = ax.twinx()
+         p1, =ax.plot(df_1, color=mymap[0], linewidth=0.8,label='yoy')     
+         handles_t.append(p1)
+         ax.text(df_1.index[-1], df_1.values[-1][0], round(df_1.values[-1][0],2), fontsize=8,color=mymap[0])#         
+         plt.suptitle(countr+". CPI, "+df_1.index[-1].strftime("%B,%Y"))                  
+             
+     if is_t2:
          #indicator2                  
          temp = sovdb_read(ticker2_sel, short_date)
          temp = temp.rename(columns={"Value": ticker2})    
          macro_data = macro_data.join(temp, how="outer")
-         df_2 = macro_data[ticker2].to_frame()
-
-        
+         df_2 = temp
+           
          MAVG = np.mean(df_2.values[-3:])
          MAVG_ANN = ((1+MAVG/100)**12-1)*100    
-         #st.write(((1+np.mean(df_2.values[-3:])/100)**12-1)*100)
-         p1, =ax.plot(df_1, color=mymap[0], linewidth=0.8,label='yoy')          
-         ax.text(df_1.index[-1], df_1.values[-1][0], round(df_1.values[-1][0],2), fontsize=8,color=mymap[0])#         
-         
+                 
+         ax2 = ax.twinx()
          p2 =ax2.bar(df_2.index, df_2[ticker2],width=d, color=mymap[1],label='mom, rhs')
+         handles_t.append(p2)
          ax2.text(df_2.index[-1], df_2.values[-1][0], round(df_2.values[-1][0],2), fontsize=8,color=mymap[1])#  
          ax2.axvline(x=df_2.index[-12]-timedelta(days=15), color = mymap[1],linestyle='--')
-         
-         plt.title("3M MA: "+str(round(MAVG,2))+"%, annualaized: "+str(round(MAVG_ANN,1))+"%")         
-         plt.suptitle(countr+". CPI, "+df_1.index[-1].strftime("%B,%Y"))         
-         
     
-         formatter = matplotlib.dates.DateFormatter('%b-%y')
-         ax.xaxis.set_major_formatter(formatter)
-         plt.show()
-         ax.legend(handles=[p1, p2])  
-         st.pyplot(fig)         
+         plt.title("3M MA: "+str(round(MAVG,2))+"%, annualaized: "+str(round(MAVG_ANN,1))+"%")         
+     
+       
+     formatter = matplotlib.dates.DateFormatter('%b-%y')
+     ax.xaxis.set_major_formatter(formatter)
+     plt.show()     
+     ax.legend(handles=handles_t)  
+     st.pyplot(fig)         
 
 with cols[1]:
      ticker1 = "CPI_M_INDEX"
      ticker1_sel = key+"_"+ticker1
      is_t1 = ticker_exists(ticker1_sel) 
      
+     fig = plt.figure()
+     ax = fig.add_subplot(1, 1, 1)
      
      if is_t1:
-         fig = plt.figure()
-         ax = fig.add_subplot(1, 1, 1)
-         
          #indicator1
          temp = sovdb_read(ticker1_sel, short_date)
          temp = temp.rename(columns={"Value": ticker1})  
          macro_data = macro_data.join(temp, how="outer")
-         df_1 = macro_data[ticker1].to_frame()
+         df_1 = temp
          
-         #df_1_y = df_1.resample('Y').last()
-         #st.write(df_1.values[-12][0])
-         ax.plot(df_1.index[-13], df_1.values[-13][0], marker=5,color=(1,0,0)) 
-         
-       
+         ax.plot(df_1.index[-13], df_1.values[-13][0], marker=5,color=(1,0,0))              
          p1, =ax.plot(df_1, color=mymap[0], linewidth=0.8,label='yoy')          
-
+     
          plt.title(countr+". CPI, index "+df_1.index[-1].strftime("%B,%Y"))         
-    
-         formatter = matplotlib.dates.DateFormatter('%b-%y')
-         ax.xaxis.set_major_formatter(formatter)
-         plt.show()
-         st.pyplot(fig)         
+   
+     formatter = matplotlib.dates.DateFormatter('%b-%y')
+     ax.xaxis.set_major_formatter(formatter)
+     plt.show()
+     st.pyplot(fig)         
  
 cols=st.columns(2)        
 with cols[0]:
-     ticker1 = "EMPL_PERS"
+     ticker1 = "EMPL_M_PERS"
      ticker1_sel = key+"_"+ticker1
      is_t1 = ticker_exists(ticker1_sel) 
  
-     ticker2 = "UNEMPL_PERS"
+     ticker2 = "UNEMPL_M_PERS"
      ticker2_sel = key+"_"+ticker2
-     is_t2 = ticker_exists(ticker2_sel) 
-     
+     is_t2 = ticker_exists(ticker2_sel)    
      
      if is_t1 & is_t2:
          fig = plt.figure()
@@ -190,17 +186,17 @@ with cols[0]:
          temp = sovdb_read(ticker1_sel, short_date)
          temp = temp.rename(columns={"Value": ticker1}) 
          macro_data = macro_data.join(temp, how="outer")
-         df_1 = macro_data[ticker1].to_frame()         
+         df_1 = temp         
          
          ax2 = ax.twinx()
          #indicator2
          temp = sovdb_read(ticker2_sel, short_date)
          temp = temp.rename(columns={"Value": ticker2}) 
          macro_data = macro_data.join(temp, how="outer")
-         df_2 = macro_data[ticker2].to_frame()
+         df_2 = temp         
          
          p1, =ax.plot(df_1, color=mymap[0], linewidth=0.8,label='employed')          
-         ax.text(df_1.index[-1], df_1.values[-1][0], round(df_1.values[-1][0],1), fontsize=8,color=mymap[0])#         
+         ax.text(df_1.index[-1], df_1.values[-1][0], round(df_1.values[-1][0],2), fontsize=8,color=mymap[0])#         
          
          p2, =ax2.plot(df_2, color=mymap[1], linewidth=0.8,label='unemployed, rhs')          
          ax2.text(df_2.index[-1], df_2.values[-1][0], round(df_2.values[-1][0],1), fontsize=8,color=mymap[1])#  
@@ -225,7 +221,7 @@ with cols[1]:
          temp = sovdb_read(ticker1_sel, short_date)
          temp = temp.rename(columns={"Value": ticker1})
          macro_data = macro_data.join(temp, how="outer")         
-         df_1 = macro_data[ticker1].to_frame()     
+         df_1 = temp     
                 
          p1, =ax.plot(df_1, color=mymap[0], linewidth=0.8)          
          ax.text(df_1.index[-1], df_1.values[-1][0], round(df_1.values[-1][0],1), fontsize=8,color=mymap[0])#         
@@ -237,6 +233,48 @@ with cols[1]:
          plt.show()         
          st.pyplot(fig)  
 
+cols=st.columns(2)        
+with cols[0]:
+     ticker1 = "IP_M_YOY"
+     ticker1_sel = key+"_"+ticker1
+     is_t1 = ticker_exists(ticker1_sel) 
+ 
+     ticker2 = "IPMNF_M_YOY"
+     ticker2_sel = key+"_"+ticker2
+     is_t2 = ticker_exists(ticker2_sel)    
+     
+     if is_t1 & is_t2:
+         fig = plt.figure()
+         ax = fig.add_subplot(1, 1, 1)
+         
+         #indicator1
+         temp = sovdb_read(ticker1_sel, short_date)
+         temp = temp.rename(columns={"Value": ticker1}) 
+         macro_data = macro_data.join(temp, how="outer")
+         df_1 = temp         
+         
+         #ax2 = ax.twinx()
+         #indicator2
+         temp = sovdb_read(ticker2_sel, short_date)
+         temp = temp.rename(columns={"Value": ticker2}) 
+         macro_data = macro_data.join(temp, how="outer")
+         df_2 = temp         
+         
+         p1, =ax.plot(df_1, color=mymap[0], linewidth=0.8,label='industrial production')          
+         ax.text(df_1.index[-1], df_1.values[-1][0], round(df_1.values[-1][0],2), fontsize=8,color=mymap[0])#         
+         
+         p2, =ax.plot(df_2, color=mymap[1], linewidth=0.8,label='manufacturing, rhs')          
+         ax.text(df_2.index[-1], df_2.values[-1][0], round(df_2.values[-1][0],1), fontsize=8,color=mymap[1])#  
+         plt.title(countr+". Industry, yoy, "+df_1.index[-1].strftime("%B,%Y"))                  
+         ax.axhline(y=0, color = (0.5, 0.5, 0.5))
+         
+         formatter = matplotlib.dates.DateFormatter('%b-%y')
+         ax.xaxis.set_major_formatter(formatter)
+         plt.show()
+         ax.legend(handles=[p1, p2])  
+         st.pyplot(fig)  
+         
+         
 buffer = io.BytesIO()
 with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:    
     macro_data.to_excel(writer, sheet_name='Sheet1', index=True)    
