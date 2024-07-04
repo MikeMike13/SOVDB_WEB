@@ -92,6 +92,17 @@ with cols[1]:
 
 d = timedelta(days=10)
 
+
+ticker1 = "LCUSD_M_AVG"
+ticker1_sel = key+"_"+ticker1
+temp= sovdb_read(ticker1_sel, short_date)
+lcusd_m_avg = temp.rename(columns={"Value": ticker1})         
+
+ticker2 = "LCUSD_M_EOP"
+ticker2_sel = key+"_"+ticker2
+temp = sovdb_read(ticker2_sel, short_date)
+lcusd_m_eop = temp.rename(columns={"Value": ticker2})         
+
 st.subheader('Real')
 cols=st.columns(2)        
 with cols[0]:
@@ -112,6 +123,7 @@ with cols[0]:
          macro_data = sovdb_read(ticker1_sel, short_date)
          macro_data = macro_data.rename(columns={"Value": ticker1})         
          df_1 = macro_data[ticker1].to_frame()
+         cpi_yoy = df_1
          
          p1, =ax.plot(df_1, color=mymap[0], linewidth=0.8,label='yoy')     
          handles_t.append(p1)
@@ -273,6 +285,183 @@ with cols[0]:
          plt.show()
          ax.legend(handles=[p1, p2])  
          st.pyplot(fig)  
+         
+cols=st.columns(2)        
+with cols[0]:
+     ticker1 = "WAGES_M_LC"
+     ticker1_sel = key+"_"+ticker1
+     is_t1 = ticker_exists(ticker1_sel) 
+ 
+      
+     
+     #№ticker2 = "IPMNF_M_YOY"
+     #ticker2_sel = key+"_"+ticker2
+     #is_t2 = ticker_exists(ticker2_sel)    
+     
+     if is_t1:
+         fig = plt.figure()
+         ax = fig.add_subplot(1, 1, 1)
+         
+         #indicator1
+         temp = sovdb_read(ticker1_sel, short_date)
+         temp = temp.rename(columns={"Value": ticker1}) 
+         macro_data = macro_data.join(temp, how="outer")
+         df_1 = temp         
+         wages_usd = df_1.values / lcusd_m_avg.values*1000
+         wages_usd = pd.DataFrame(data=wages_usd, index=df_1.index)
+                  
+         df_2 = df_1.pct_change(periods=12) * 100  
+         wages_yoy = df_2
+         
+         ax2 = ax.twinx()
+         #indicator2
+         #temp = sovdb_read(ticker2_sel, short_date)
+         #temp = temp.rename(columns={"Value": ticker2}) 
+         #macro_data = macro_data.join(temp, how="outer")
+         #df_2 = temp         
+         
+         p1, =ax.plot(df_1, color=mymap[0], linewidth=0.8,label='000, LC')          
+         ax.text(df_1.index[-1], df_1.values[-1][0], round(df_1.values[-1][0],2), fontsize=8,color=mymap[0])#         
+         
+         p2, =ax2.plot(wages_usd, color=mymap[1], linewidth=0.8,label='USD')          
+         ax2.text(wages_usd.index[-1], wages_usd.values[-1][0], round(wages_usd.values[-1][0],1), fontsize=8,color=mymap[1])#  
+         plt.title(countr+". Wages, "+df_1.index[-1].strftime("%B,%Y"))                  
+         #ax.axhline(y=0, color = (0.5, 0.5, 0.5))
+         
+         formatter = matplotlib.dates.DateFormatter('%b-%y')
+         ax.xaxis.set_major_formatter(formatter)
+         plt.show()
+         ax.legend(handles=[p1, p2])  
+         st.pyplot(fig)  
+
+with cols[1]:    
+        fig = plt.figure()
+        ax = fig.add_subplot(1, 1, 1)                
+                
+        p1, =ax.plot(wages_yoy, color=mymap[0], linewidth=0.8,label='wages, yoy')          
+        ax.text(wages_yoy.index[-1], wages_yoy.values[-1][0], round(wages_yoy.values[-1][0],2), fontsize=8,color=mymap[0])#         
+        
+        p2, =ax.plot(cpi_yoy, color=mymap[1], linewidth=0.8,label='cpi, yoy')          
+        ax.text(cpi_yoy.index[-1], cpi_yoy.values[-1][0], round(cpi_yoy.values[-1][0],1), fontsize=8,color=mymap[1])#  
+        plt.title(countr+". Wages, "+df_1.index[-1].strftime("%B,%Y"))                  
+        #ax.axhline(y=0, color = (0.5, 0.5, 0.5))
+        
+        formatter = matplotlib.dates.DateFormatter('%b-%y')
+        ax.xaxis.set_major_formatter(formatter)
+        plt.show()
+        ax.legend(handles=[p1, p2])  
+        st.pyplot(fig) 
+         
+st.subheader('Fiscal')
+cols=st.columns(2)        
+with cols[0]:
+     ticker1 = "GOVREV_M_LC"
+     ticker1_sel = key+"_"+ticker1
+     is_t1 = ticker_exists(ticker1_sel) 
+ 
+     ticker2 = "GOVEXP_M_LC"
+     ticker2_sel = key+"_"+ticker2
+     is_t2 = ticker_exists(ticker2_sel)    
+          
+     fig = plt.figure()
+     ax = fig.add_subplot(1, 1, 1)
+     
+     handles_t = [];
+     if is_t1:
+         #indicator1                  
+         temp = sovdb_read(ticker1_sel, short_date)
+         temp = temp.rename(columns={"Value": ticker1})    
+         macro_data = macro_data.join(temp, how="outer")
+         df_1 = temp   
+         rev_12M = df_1.rolling(12).sum()         
+         
+         p1, =ax.plot(df_1, color=mymap[0], linewidth=0.8,label='Revenues')     
+         handles_t.append(p1)
+         ax.text(df_1.index[-1], df_1.values[-1][0], round(df_1.values[-1][0],2), fontsize=8,color=mymap[0])#                  
+             
+     if is_t2:
+         #indicator2                  
+         temp = sovdb_read(ticker2_sel, short_date)
+         temp = temp.rename(columns={"Value": ticker2})    
+         macro_data = macro_data.join(temp, how="outer")
+         df_2 = temp           
+         exp_12M = df_2.rolling(12).sum()
+         
+         p2, = ax.plot(df_2, color=mymap[1],label='Expenditires')
+         handles_t.append(p2)
+         ax.text(df_2.index[-1], df_2.values[-1][0], round(df_2.values[-1][0],2), fontsize=8,color=mymap[1])#           
+    
+         plt.title("Government balance, bln LC, "+df_1.index[-1].strftime("%B,%Y"))         
+     
+       
+     formatter = matplotlib.dates.DateFormatter('%b-%y')
+     ax.xaxis.set_major_formatter(formatter)
+     plt.show()     
+     ax.legend(handles=handles_t)  
+     st.pyplot(fig) 
+     
+with cols[1]:
+         
+     fig = plt.figure()
+     ax = fig.add_subplot(1, 1, 1)
+     
+     handles_t = [];
+     if is_t1:
+
+         p1, =ax.plot(rev_12M, color=mymap[0], linewidth=0.8,label='Revenues')     
+         handles_t.append(p1)
+         ax.text(rev_12M.index[-1], rev_12M.values[-1][0], round(rev_12M.values[-1][0],2), fontsize=8,color=mymap[0])#                  
+             
+     if is_t2:         
+         
+         p2, = ax.plot(exp_12M, color=mymap[1],label='Expenditires')
+         handles_t.append(p2)
+         ax.text(exp_12M.index[-1], exp_12M.values[-1][0], round(exp_12M.values[-1][0],2), fontsize=8,color=mymap[1])#           
+    
+         plt.title("Government balance, 12M sum, bln LC, "+df_1.index[-1].strftime("%B,%Y"))         
+     
+       
+     formatter = matplotlib.dates.DateFormatter('%b-%y')
+     ax.xaxis.set_major_formatter(formatter)
+     plt.show()     
+     ax.legend(handles=handles_t)  
+     st.pyplot(fig) 
+        
+cols=st.columns(2)        
+with cols[0]:
+     ticker1 = "GOVDEBT_M_LC"
+     ticker1_sel = key+"_"+ticker1
+     is_t1 = ticker_exists(ticker1_sel)  
+     
+     if is_t1:
+         fig = plt.figure()
+         ax = fig.add_subplot(1, 1, 1)
+         
+         #indicator1
+         temp = sovdb_read(ticker1_sel, short_date)
+         temp = temp.rename(columns={"Value": ticker1}) 
+         macro_data = macro_data.join(temp, how="outer")
+         df_1 = temp  
+         
+         df_1['govdebt_m_usd'] = df_1['GOVDEBT_M_LC'] / lcusd_m_eop['LCUSD_M_EOP']
+         #govdebt_m_usd = pd.DataFrame(data=govdebt_Rm_usd, index=df_1.index)
+         
+         
+         p1, =ax.plot(df_1['GOVDEBT_M_LC'], color=mymap[0], linewidth=0.8,label='bln LC')          
+         #ax.text(df_1['GOVDEBT_M_LC'].index[-1], df_1['GOVDEBT_M_LC'].values[-1][0], round(df_1['GOVDEBT_M_LC'].values[-1][0],2), fontsize=8,color=mymap[0])#                  
+         #st.write(df_1['govdebt_m_usd'].values[-1])
+         ax2 = ax.twinx()         
+         p2, =ax2.plot(df_1['govdebt_m_usd'], color=mymap[1], linewidth=0.8,label='bln USD, rhs')          
+         ax2.text(df_1['govdebt_m_usd'].index[-1], df_1['govdebt_m_usd'].values[-1], round(df_1['govdebt_m_usd'].values[-1],1), fontsize=8,color=mymap[1])#  
+                  
+         plt.title(countr+". Government debt, bln LC, "+df_1.index[-1].strftime("%B,%Y"))                  
+         
+         formatter = matplotlib.dates.DateFormatter('%b-%y')
+         ax.xaxis.set_major_formatter(formatter)
+         plt.show()
+         ax.legend(handles=[p1, p2])  
+         st.pyplot(fig)  
+         
          
          
 buffer = io.BytesIO()
