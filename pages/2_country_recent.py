@@ -443,10 +443,8 @@ with cols[0]:
          macro_data = macro_data.join(temp, how="outer")
          df_1 = temp  
          
-         df_1['govdebt_m_usd'] = df_1['GOVDEBT_M_LC'] / lcusd_m_eop['LCUSD_M_EOP']
-         #govdebt_m_usd = pd.DataFrame(data=govdebt_Rm_usd, index=df_1.index)
-         
-         
+         df_1['govdebt_m_usd'] = df_1['GOVDEBT_M_LC'] / lcusd_m_eop['LCUSD_M_EOP']        
+                  
          p1, =ax.plot(df_1['GOVDEBT_M_LC'], color=mymap[0], linewidth=0.8,label='bln LC')          
          #ax.text(df_1['GOVDEBT_M_LC'].index[-1], df_1['GOVDEBT_M_LC'].values[-1][0], round(df_1['GOVDEBT_M_LC'].values[-1][0],2), fontsize=8,color=mymap[0])#                  
          #st.write(df_1['govdebt_m_usd'].values[-1])
