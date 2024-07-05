@@ -446,8 +446,6 @@ with cols[0]:
          df_1['govdebt_m_usd'] = df_1['GOVDEBT_M_LC'] / lcusd_m_eop['LCUSD_M_EOP']        
                   
          p1, =ax.plot(df_1['GOVDEBT_M_LC'], color=mymap[0], linewidth=0.8,label='bln LC')          
-         #ax.text(df_1['GOVDEBT_M_LC'].index[-1], df_1['GOVDEBT_M_LC'].values[-1][0], round(df_1['GOVDEBT_M_LC'].values[-1][0],2), fontsize=8,color=mymap[0])#                  
-         #st.write(df_1['govdebt_m_usd'].values[-1])
          ax2 = ax.twinx()         
          p2, =ax2.plot(df_1['govdebt_m_usd'], color=mymap[1], linewidth=0.8,label='bln USD, rhs')          
          ax2.text(df_1['govdebt_m_usd'].index[-1], df_1['govdebt_m_usd'].values[-1], round(df_1['govdebt_m_usd'].values[-1],1), fontsize=8,color=mymap[1])#  
