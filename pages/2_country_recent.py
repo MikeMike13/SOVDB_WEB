@@ -106,6 +106,34 @@ lcusd_m_eop = temp.rename(columns={"Value": ticker2})
 st.subheader('Real')
 cols=st.columns(2)        
 with cols[0]:
+     ticker1 = "GDPR_Q_YOY"
+     ticker1_sel = key+"_"+ticker1
+     is_t1 = ticker_exists(ticker1_sel) 
+          
+     fig = plt.figure()
+     ax = fig.add_subplot(1, 1, 1)
+     
+     handles_t = [];
+     if is_t1:
+     #indicator1
+         macro_data = sovdb_read(ticker1_sel, short_date)
+         macro_data = macro_data.rename(columns={"Value": ticker1})         
+         df_1 = macro_data[ticker1].to_frame()         
+         
+         p1, =ax.plot(df_1, color=mymap[0], linewidth=0.8,label='yoy')     
+         handles_t.append(p1)
+         ax.text(df_1.index[-1], df_1.values[-1][0], round(df_1.values[-1][0],2), fontsize=8,color=mymap[0])#         
+         plt.suptitle(countr+". GDP growth, "+df_1.index[-1].strftime("%B,%Y"))                               
+     
+       
+     formatter = matplotlib.dates.DateFormatter('%b-%y')
+     ax.xaxis.set_major_formatter(formatter)
+     plt.show()     
+     #ax.legend(handles=handles_t)  
+     st.pyplot(fig)    
+
+cols=st.columns(2)       
+with cols[0]:
      ticker1 = "CPI_M_YOY"
      ticker1_sel = key+"_"+ticker1
      is_t1 = ticker_exists(ticker1_sel) 
@@ -120,9 +148,14 @@ with cols[0]:
      handles_t = [];
      if is_t1:
      #indicator1
-         macro_data = sovdb_read(ticker1_sel, short_date)
-         macro_data = macro_data.rename(columns={"Value": ticker1})         
-         df_1 = macro_data[ticker1].to_frame()
+         temp = sovdb_read(ticker1_sel, short_date)
+         temp = temp.rename(columns={"Value": ticker1})    
+         macro_data = macro_data.join(temp, how="outer")
+         df_1 = temp
+     
+         #macro_data = sovdb_read(ticker1_sel, short_date)
+         #macro_data = macro_data.rename(columns={"Value": ticker1})         
+         #df_1 = macro_data[ticker1].to_frame()
          cpi_yoy = df_1
          
          p1, =ax.plot(df_1, color=mymap[0], linewidth=0.8,label='yoy')     
@@ -458,7 +491,217 @@ with cols[0]:
          ax.legend(handles=[p1, p2])  
          st.pyplot(fig)  
          
+with cols[1]:
+     ticker1 = "CBLIABCG_M_LC"
+     ticker1_sel = key+"_"+ticker1
+     is_t1 = ticker_exists(ticker1_sel) 
+ 
+     ticker2 = "BNLIABCG_M_LC"
+     ticker2_sel = key+"_"+ticker2
+     is_t2 = ticker_exists(ticker2_sel)    
+          
+     fig = plt.figure()
+     ax = fig.add_subplot(1, 1, 1)
+     
+     handles_t = [];
+     if is_t1:
+         #indicator1                  
+         temp = sovdb_read(ticker1_sel, short_date)
+         temp = temp.rename(columns={"Value": ticker1})    
+         macro_data = macro_data.join(temp, how="outer")
+         df_1 = temp            
          
+         p1, =ax.plot(df_1, color=mymap[0], linewidth=0.8,label='in CBR')     
+         handles_t.append(p1)
+         ax.text(df_1.index[-1], df_1.values[-1][0], round(df_1.values[-1][0],2), fontsize=8,color=mymap[0])#                  
+             
+     if is_t2:
+         #indicator2                  
+         temp = sovdb_read(ticker2_sel, short_date)
+         temp = temp.rename(columns={"Value": ticker2})    
+         macro_data = macro_data.join(temp, how="outer")
+         df_2 = temp                    
+         
+         p2, = ax.plot(df_2, color=mymap[1],label='in Banks')
+         handles_t.append(p2)
+         ax.text(df_2.index[-1], df_2.values[-1][0], round(df_2.values[-1][0],2), fontsize=8,color=mymap[1])#           
+    
+         plt.title("Budget liquidity, bln LC, "+df_1.index[-1].strftime("%B,%Y"))         
+     
+       
+     formatter = matplotlib.dates.DateFormatter('%b-%y')
+     ax.xaxis.set_major_formatter(formatter)
+     plt.show()     
+     ax.legend(handles=handles_t)  
+     st.pyplot(fig) 
+
+         
+st.subheader('External')
+cols=st.columns(2)        
+with cols[0]:
+     ticker1 = "EXPG_M_USD"
+     ticker1_sel = key+"_"+ticker1
+     is_t1 = ticker_exists(ticker1_sel) 
+ 
+     ticker2 = "IMPG_M_USD"
+     ticker2_sel = key+"_"+ticker2
+     is_t2 = ticker_exists(ticker2_sel)    
+          
+     fig = plt.figure()
+     ax = fig.add_subplot(1, 1, 1)
+     
+     handles_t = [];
+     if is_t1:
+         #indicator1                  
+         temp = sovdb_read(ticker1_sel, short_date)
+         temp = temp.rename(columns={"Value": ticker1})    
+         macro_data = macro_data.join(temp, how="outer")
+         df_1 = temp   
+         exp_12M = df_1.rolling(12).sum()         
+         
+         p1, =ax.plot(df_1, color=mymap[0], linewidth=0.8,label='Exports')     
+         handles_t.append(p1)
+         ax.text(df_1.index[-1], df_1.values[-1][0], round(df_1.values[-1][0],2), fontsize=8,color=mymap[0])#                  
+             
+     if is_t2:
+         #indicator2                  
+         temp = sovdb_read(ticker2_sel, short_date)
+         temp = temp.rename(columns={"Value": ticker2})    
+         macro_data = macro_data.join(temp, how="outer")
+         df_2 = temp           
+         imp_12M = df_2.rolling(12).sum()
+         
+         p2, = ax.plot(df_2, color=mymap[1],label='Imports')
+         handles_t.append(p2)
+         ax.text(df_2.index[-1], df_2.values[-1][0], round(df_2.values[-1][0],2), fontsize=8,color=mymap[1])#           
+    
+         plt.title("Trade of goods, bln USD, "+df_1.index[-1].strftime("%B,%Y"))         
+     
+       
+     formatter = matplotlib.dates.DateFormatter('%b-%y')
+     ax.xaxis.set_major_formatter(formatter)
+     plt.show()     
+     ax.legend(handles=handles_t)  
+     st.pyplot(fig) 
+     
+with cols[1]:
+         
+     fig = plt.figure()
+     ax = fig.add_subplot(1, 1, 1)
+     
+     handles_t = [];
+     if is_t1:
+
+         p1, =ax.plot(exp_12M, color=mymap[0], linewidth=0.8,label='Exports')     
+         handles_t.append(p1)
+         ax.text(exp_12M.index[-1], exp_12M.values[-1][0], round(exp_12M.values[-1][0],2), fontsize=8,color=mymap[0])#                  
+             
+     if is_t2:         
+         
+         p2, = ax.plot(imp_12M, color=mymap[1],label='Imports')
+         handles_t.append(p2)
+         ax.text(imp_12M.index[-1], imp_12M.values[-1][0], round(imp_12M.values[-1][0],2), fontsize=8,color=mymap[1])#           
+    
+         plt.title("Trade of goods, 12M sum, bln USD, "+df_1.index[-1].strftime("%B,%Y"))         
+     
+       
+     formatter = matplotlib.dates.DateFormatter('%b-%y')
+     ax.xaxis.set_major_formatter(formatter)
+     plt.show()     
+     ax.legend(handles=handles_t)  
+     st.pyplot(fig) 
+
+cols=st.columns(2)        
+with cols[0]:
+     ticker1 = "RES_M_USD"
+     ticker1_sel = key+"_"+ticker1
+     is_t1 = ticker_exists(ticker1_sel) 
+ 
+     ticker2 = "RESFX_M_USD"
+     ticker2_sel = key+"_"+ticker2
+     is_t2 = ticker_exists(ticker2_sel)    
+
+     ticker3 = "RESGOLD_M_USD"
+     ticker3_sel = key+"_"+ticker3
+     is_t3 = ticker_exists(ticker3_sel)  
+          
+     fig = plt.figure()
+     ax = fig.add_subplot(1, 1, 1)
+     
+     handles_t = [];
+     if is_t1:
+         #indicator1                  
+         temp = sovdb_read(ticker1_sel, short_date)
+         temp = temp.rename(columns={"Value": ticker1})    
+         macro_data = macro_data.join(temp, how="outer")
+         df_1 = temp            
+         
+         p1, =ax.plot(df_1, color=mymap[0], linewidth=0.8,label='Total')     
+         handles_t.append(p1)
+         ax.text(df_1.index[-1], df_1.values[-1][0], round(df_1.values[-1][0],2), fontsize=8,color=mymap[0])#                  
+             
+     if is_t2:
+         #indicator2                  
+         temp = sovdb_read(ticker2_sel, short_date)
+         temp = temp.rename(columns={"Value": ticker2})             
+         #macro_data = macro_data.join(temp, how="outer")
+         df_2 = temp                    
+         
+         p2, = ax.plot(df_2, color=mymap[1],label='FX')
+         handles_t.append(p2)
+         ax.text(df_2.index[-1], df_2.values[-1][0], round(df_2.values[-1][0],2), fontsize=8,color=mymap[1])#           
+    
+     if is_t3:
+         #indicator3                  
+         temp = sovdb_read(ticker3_sel, short_date)
+         temp = temp.rename(columns={"Value": ticker2})    
+         macro_data = macro_data.join(temp, how="outer")
+         df_3 = temp        
+         gold_res = df_3
+         
+         p3, = ax.plot(df_3, color=mymap[2],label='Gold')
+         handles_t.append(p3)
+         ax.text(df_3.index[-1], df_3.values[-1][0], round(df_3.values[-1][0],2), fontsize=8,color=mymap[2])#      
+         
+         plt.title("Reserves, bln USD, "+df_1.index[-1].strftime("%B,%Y"))         
+     
+       
+     formatter = matplotlib.dates.DateFormatter('%b-%y')
+     ax.xaxis.set_major_formatter(formatter)
+     plt.show()     
+     ax.legend(handles=handles_t)  
+     st.pyplot(fig) 
+
+with cols[1]:
+     ticker1 = "RESGOLD_M_OUNCE"
+     ticker1_sel = key+"_"+ticker1
+     is_t1 = ticker_exists(ticker1_sel) 
+               
+     fig = plt.figure()
+     ax = fig.add_subplot(1, 1, 1)
+     
+     handles_t = [];
+     if is_t1:
+         #indicator1                  
+         temp = sovdb_read(ticker1_sel, short_date)
+         temp = temp.rename(columns={"Value": ticker1}) 
+         temp = (temp*1000000)/35270 
+         macro_data = macro_data.join(temp, how="outer")
+         df_1 = temp
+         
+         p1, =ax.plot(df_1, color=mymap[0], linewidth=0.8,label='Total')     
+         handles_t.append(p1)
+         ax.text(df_1.index[-1], df_1.values[-1][0], round(df_1.values[-1][0],2), fontsize=8,color=mymap[0])#                  
+                      
+         plt.title("Reserves, gold, tonns, "+df_1.index[-1].strftime("%B,%Y"))         
+     
+       
+     formatter = matplotlib.dates.DateFormatter('%b-%y')
+     ax.xaxis.set_major_formatter(formatter)
+     plt.show()     
+     #ax.legend(handles=handles_t)  
+     st.pyplot(fig) 
+
          
 buffer = io.BytesIO()
 with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:    
