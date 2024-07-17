@@ -1089,7 +1089,7 @@ with cols[1]:
         
     
     handles_t = [];
-    if is_t1 & is_t2:
+    if is_t1 & is_t2 & is_t3:
         
         ext_cover = res_q
         
