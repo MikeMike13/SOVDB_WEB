@@ -103,6 +103,21 @@ ticker2_sel = key+"_"+ticker2
 temp = sovdb_read(ticker2_sel, short_date)
 lcusd_m_eop = temp.rename(columns={"Value": ticker2})         
 
+ticker1 = "LCUSD_Q_AVG"
+ticker1_sel = key+"_"+ticker1
+temp= sovdb_read(ticker1_sel, short_date)
+lcusd_q_avg = temp.rename(columns={"Value": ticker1})         
+
+ticker2 = "LCUSD_Q_EOP"
+ticker2_sel = key+"_"+ticker2
+temp = sovdb_read(ticker2_sel, short_date)
+lcusd_q_eop = temp.rename(columns={"Value": ticker2})  
+
+ticker2 = "GDPN4Q_Q_LC"
+ticker2_sel = key+"_"+ticker2
+temp = sovdb_read(ticker2_sel, short_date)
+gdpn_4q = temp.rename(columns={"Value": ticker2})  
+
 st.subheader('Real')
 cols=st.columns(2)        
 with cols[0]:
@@ -247,10 +262,21 @@ with cols[0]:
      ticker1 = "EMPL_M_PERS"
      ticker1_sel = key+"_"+ticker1
      is_t1 = ticker_exists(ticker1_sel) 
+     
+     if ~is_t1:
+         ticker1 = "EMPL_Q_PERS"
+         ticker1_sel = key+"_"+ticker1
+         is_t1 = ticker_exists(ticker1_sel)          
  
      ticker2 = "UNEMPL_M_PERS"
      ticker2_sel = key+"_"+ticker2
-     is_t2 = ticker_exists(ticker2_sel)    
+     is_t2 = ticker_exists(ticker2_sel)   
+     
+     if ~is_t2:
+         ticker2 = "UNEMPL_Q_PERS"
+         ticker2_sel = key+"_"+ticker2
+         is_t2 = ticker_exists(ticker2_sel) 
+         
      
      if is_t1 & is_t2:
          fig = plt.figure()
@@ -287,6 +313,11 @@ with cols[1]:
      ticker1 = "UNEMPL_M"
      ticker1_sel = key+"_"+ticker1
      is_t1 = ticker_exists(ticker1_sel)  
+
+     if ~is_t1:
+         ticker1 = "UNEMPL_Q"
+         ticker1_sel = key+"_"+ticker1
+         is_t1 = ticker_exists(ticker1_sel) 
           
      if is_t1:
          fig = plt.figure()
@@ -528,8 +559,15 @@ with cols[0]:
      ticker1 = "GOVDEBT_M_LC"
      ticker1_sel = key+"_"+ticker1
      is_t1 = ticker_exists(ticker1_sel)  
+     is_t1q = 0
      
-     if is_t1:
+     if  not is_t1:
+         ticker1 = "GOVDEBT_Q_LC"
+         ticker1_sel = key+"_"+ticker1
+         is_t1q = ticker_exists(ticker1_sel) 
+         
+     
+     if is_t1 or is_t1q:
          fig = plt.figure()
          ax = fig.add_subplot(1, 1, 1)
          
@@ -539,12 +577,21 @@ with cols[0]:
          macro_data = macro_data.join(temp, how="outer")
          df_1 = temp  
          
-         df_1['govdebt_m_usd'] = df_1['GOVDEBT_M_LC'] / lcusd_m_eop['LCUSD_M_EOP']        
-                  
-         p1, =ax.plot(df_1['GOVDEBT_M_LC'], color=mymap[0], linewidth=0.8,label='bln LC')          
-         ax2 = ax.twinx()         
-         p2, =ax2.plot(df_1['govdebt_m_usd'], color=mymap[1], linewidth=0.8,label='bln USD, rhs')          
-         ax2.text(df_1['govdebt_m_usd'].index[-1], df_1['govdebt_m_usd'].values[-1], round(df_1['govdebt_m_usd'].values[-1],1), fontsize=8,color=mymap[1])#  
+         if is_t1:
+             df_1['govdebt_m_usd'] = df_1['GOVDEBT_M_LC'] / lcusd_m_eop['LCUSD_M_EOP']        
+                      
+             p1, =ax.plot(df_1['GOVDEBT_M_LC'], color=mymap[0], linewidth=0.8,label='bln LC')          
+             ax2 = ax.twinx()         
+             p2, =ax2.plot(df_1['govdebt_m_usd'], color=mymap[1], linewidth=0.8,label='bln USD, rhs')          
+             ax2.text(df_1['govdebt_m_usd'].index[-1], df_1['govdebt_m_usd'].values[-1], round(df_1['govdebt_m_usd'].values[-1],1), fontsize=8,color=mymap[1])#  
+         if is_t1q:
+             df_1['govdebt_q_usd'] = df_1['GOVDEBT_Q_LC'] / lcusd_q_eop['LCUSD_Q_EOP']        
+                      
+             p1, =ax.plot(df_1['GOVDEBT_Q_LC'], color=mymap[0], linewidth=0.8,label='bln LC')          
+             ax2 = ax.twinx()         
+             p2, =ax2.plot(df_1['govdebt_q_usd'], color=mymap[1], linewidth=0.8,label='bln USD, rhs')          
+             ax2.text(df_1['govdebt_q_usd'].index[-1], df_1['govdebt_q_usd'].values[-1], round(df_1['govdebt_q_usd'].values[-1],1), fontsize=8,color=mymap[1])#  
+             
                   
          plt.title(countr+". Government debt, bln LC, "+df_1.index[-1].strftime("%B,%Y"))                  
          
@@ -563,40 +610,42 @@ with cols[1]:
      ticker2_sel = key+"_"+ticker2
      is_t2 = ticker_exists(ticker2_sel)    
           
-     fig = plt.figure()
-     ax = fig.add_subplot(1, 1, 1)
      
      handles_t = [];
-     if is_t1:
-         #indicator1                  
-         temp = sovdb_read(ticker1_sel, short_date)
-         temp = temp.rename(columns={"Value": ticker1})    
-         macro_data = macro_data.join(temp, how="outer")
-         df_1 = temp            
+     if is_t1 | is_t2:
+         fig = plt.figure()
+         ax = fig.add_subplot(1, 1, 1)
          
-         p1, =ax.plot(df_1, color=mymap[0], linewidth=0.8,label='in CBR')     
-         handles_t.append(p1)
-         ax.text(df_1.index[-1], df_1.values[-1][0], round(df_1.values[-1][0],2), fontsize=8,color=mymap[0])#                  
+         if is_t1:
+             #indicator1                  
+             temp = sovdb_read(ticker1_sel, short_date)
+             temp = temp.rename(columns={"Value": ticker1})    
+             macro_data = macro_data.join(temp, how="outer")
+             df_1 = temp            
              
-     if is_t2:
-         #indicator2                  
-         temp = sovdb_read(ticker2_sel, short_date)
-         temp = temp.rename(columns={"Value": ticker2})    
-         macro_data = macro_data.join(temp, how="outer")
-         df_2 = temp                    
-         
-         p2, = ax.plot(df_2, color=mymap[1],label='in Banks')
-         handles_t.append(p2)
-         ax.text(df_2.index[-1], df_2.values[-1][0], round(df_2.values[-1][0],2), fontsize=8,color=mymap[1])#           
-    
-         plt.title(countr+". Budget liquidity, bln LC, "+df_1.index[-1].strftime("%B,%Y"))         
+             p1, =ax.plot(df_1, color=mymap[0], linewidth=0.8,label='in CBR')     
+             handles_t.append(p1)
+             ax.text(df_1.index[-1], df_1.values[-1][0], round(df_1.values[-1][0],2), fontsize=8,color=mymap[0])#                  
+                 
+         if is_t2:
+             #indicator2                  
+             temp = sovdb_read(ticker2_sel, short_date)
+             temp = temp.rename(columns={"Value": ticker2})    
+             macro_data = macro_data.join(temp, how="outer")
+             df_2 = temp                    
+             
+             p2, = ax.plot(df_2, color=mymap[1],label='in Banks')
+             handles_t.append(p2)
+             ax.text(df_2.index[-1], df_2.values[-1][0], round(df_2.values[-1][0],2), fontsize=8,color=mymap[1])#           
+        
+             plt.title(countr+". Budget liquidity, bln LC, "+df_1.index[-1].strftime("%B,%Y"))         
      
        
-     formatter = matplotlib.dates.DateFormatter('%b-%y')
-     ax.xaxis.set_major_formatter(formatter)
-     plt.show()     
-     ax.legend(handles=handles_t)  
-     st.pyplot(fig) 
+         formatter = matplotlib.dates.DateFormatter('%b-%y')
+         ax.xaxis.set_major_formatter(formatter)
+         plt.show()     
+         ax.legend(handles=handles_t)  
+         st.pyplot(fig) 
 
          
 st.subheader('External')
@@ -619,11 +668,11 @@ with cols[0]:
      ticker4a = "IMPGS_Q_USD"
      ticker4a_sel = key+"_"+ticker4a
           
-     fig = plt.figure()
-     ax = fig.add_subplot(1, 1, 1)
-     
      handles_t = [];
      if is_t1:
+         fig = plt.figure()
+         ax = fig.add_subplot(1, 1, 1)
+         
          #indicator1                  
          temp = sovdb_read(ticker1_sel, short_date)
          temp = temp.rename(columns={"Value": ticker1})    
@@ -669,11 +718,11 @@ with cols[0]:
          #ax.set_xticklabels(labels=BOP_tbl.index.to_list().strftime('%b-%y'))
          #datetime.today().strftime('%Y-%m-%d')
        
-     #formatter = matplotlib.dates.DateFormatter('%b-%y')
-     #ax.xaxis.set_major_formatter(formatter)
-     plt.show()     
-     #ax.legend(handles=handles_t)  
-     st.pyplot(fig) 
+         #formatter = matplotlib.dates.DateFormatter('%b-%y')
+         #ax.xaxis.set_major_formatter(formatter)
+         plt.show()     
+         #ax.legend(handles=handles_t)  
+         st.pyplot(fig) 
      
 with cols[1]:
      ticker1 = "BG_Q_USD"
@@ -687,14 +736,14 @@ with cols[1]:
      ticker3_sel = key+"_"+ticker3
 
      ticker4 = "SI_Q_USD"
-     ticker4_sel = key+"_"+ticker4
-
-          
-     fig = plt.figure()
-     ax = fig.add_subplot(1, 1, 1)     
+     ticker4_sel = key+"_"+ticker4        
      
      handles_t = [];
      if is_t1:
+         
+         fig = plt.figure()
+         ax = fig.add_subplot(1, 1, 1)     
+         
          #indicator1                  
          temp = sovdb_read(ticker1_sel, short_date)
          temp = temp.rename(columns={"Value": ticker1})    
@@ -733,11 +782,11 @@ with cols[1]:
          plt.title(countr+". Currnet account bln USD, "+CA_tbl.index[-1].strftime("%B,%Y"))                     
          
        
-     formatter = matplotlib.dates.DateFormatter('%b-%y')
-     ax.xaxis.set_major_formatter(formatter)
-     plt.show()     
-
-     st.pyplot(fig) 
+         formatter = matplotlib.dates.DateFormatter('%b-%y')
+         ax.xaxis.set_major_formatter(formatter)
+         plt.show()     
+    
+         st.pyplot(fig) 
 
 cols=st.columns(2)        
 with cols[0]:
@@ -1121,6 +1170,245 @@ with cols[1]:
 st.subheader('Banks')
 cols=st.columns(2)
 with cols[0]:
+     ticker1 = "CREDITPRIV_M_LC"
+     ticker1_sel = key+"_"+ticker1
+     is_t1 = ticker_exists(ticker1_sel) 
+
+     fig = plt.figure()
+     ax = fig.add_subplot(1, 1, 1)
+     
+     handles_t = [];
+     if is_t1:
+         #indicator1                  
+         temp = sovdb_read(ticker1_sel, short_date)
+         temp = temp.rename(columns={"Value": ticker1})    
+         macro_data = macro_data.join(temp, how="outer")
+         df_1 = temp            
+         
+         df_2 = df_1.pct_change(periods=12) * 100  
+         credit_yoy = df_2
+         
+         
+         #p1, =ax.plot(df_1, color=mymap[0], linewidth=0.8,label='ROE') 
+         p1 =ax.bar(df_1.index, df_1[ticker1],width=d, color=mymap[1],label='bln LC')
+         handles_t.append(p1)
+         ax2 = ax.twinx()
+         p2, =ax2.plot(df_2, color=mymap[0], linewidth=0.8,label='yoy, rhs') 
+         handles_t.append(p2)
+         ax2.text(df_2.index[-1], df_2.values[-1][0], round(df_2.values[-1][0],2), fontsize=8,color=mymap[0])#                                   
+         
+         plt.title(countr+". Credit to private sector, "+df_1.index[-1].strftime("%B,%Y"))         
+     
+       
+     formatter = matplotlib.dates.DateFormatter('%b-%y')
+     ax.xaxis.set_major_formatter(formatter)
+     plt.show()     
+     ax.legend(handles=handles_t)  
+     st.pyplot(fig) 
+
+with cols[1]:
+     ticker1 = "M2_M_LC"
+     ticker1_sel = key+"_"+ticker1
+     is_t1 = ticker_exists(ticker1_sel) 
+     is_m2 = is_t1
+
+     ticker2 = "MBROAD_M_LC"
+     ticker2_sel = key+"_"+ticker2
+     is_t2 = ticker_exists(ticker2_sel) 
+     
+     ticker2a = "MBROAD_Q_LC"
+     ticker2a_sel = key+"_"+ticker2a     
+     
+     fig = plt.figure()
+     ax = fig.add_subplot(1, 1, 1)
+     
+     handles_t = [];
+     if is_t1:
+         #indicator1                  
+         temp = sovdb_read(ticker1_sel, short_date)
+         temp = temp.rename(columns={"Value": ticker1})    
+         macro_data = macro_data.join(temp, how="outer")
+         df_1 = temp                     
+         df_2 = df_1.pct_change(periods=12) * 100  
+         m2_yoy = df_2
+         
+         temp = sovdb_read(ticker2_sel, short_date)
+         temp = temp.rename(columns={"Value": ticker2})    
+         macro_data = macro_data.join(temp, how="outer")
+         df_2 = temp                     
+         df_3 = df_2.pct_change(periods=12) * 100  
+         m3_yoy = df_3
+         
+         temp = sovdb_read(ticker2a_sel, short_date)
+         temp = temp.rename(columns={"Value": ticker2a})    
+         m3_q = temp         
+         
+         
+         p1, =ax.plot(credit_yoy, color=mymap[0], linewidth=0.8,label='credit')          
+         handles_t.append(p1)
+         ax.text(credit_yoy.index[-1], credit_yoy.values[-1][0], round(credit_yoy.values[-1][0],2), fontsize=8,color=mymap[0])#                                   
+         
+         p2, =ax.plot(m2_yoy, color=mymap[1], linewidth=0.8,label='M2') 
+         handles_t.append(p2)
+         ax.text(m2_yoy.index[-1], m2_yoy.values[-1][0], round(m2_yoy.values[-1][0],2), fontsize=8,color=mymap[1])#                                   
+         
+         p3, =ax.plot(m3_yoy, color=mymap[2], linewidth=0.8,label='Broad M (M3)') 
+         handles_t.append(p3)
+         ax.text(m3_yoy.index[-1], m3_yoy.values[-1][0], round(m3_yoy.values[-1][0],2), fontsize=8,color=mymap[2])#                                   
+         
+         
+         plt.title(countr+". Credit & Money supply, "+df_1.index[-1].strftime("%B,%Y"))         
+     
+       
+     formatter = matplotlib.dates.DateFormatter('%b-%y')
+     ax.xaxis.set_major_formatter(formatter)
+     plt.show()     
+     ax.legend(handles=handles_t)  
+     st.pyplot(fig) 
+     
+cols=st.columns(2)
+with cols[0]:
+     ticker1 = "CAPAD_Q"
+     ticker1_sel = key+"_"+ticker1
+     is_t1 = ticker_exists(ticker1_sel) 
+ 
+     fig = plt.figure()
+     ax = fig.add_subplot(1, 1, 1)
+     
+     handles_t = [];
+     if is_t1:
+         #indicator1                  
+         temp = sovdb_read(ticker1_sel, short_date)
+         temp = temp.rename(columns={"Value": ticker1})    
+         macro_data = macro_data.join(temp, how="outer")
+         df_1 = temp            
+         
+         p1, =ax.plot(df_1, color=mymap[0], linewidth=0.8,label='ROE')     
+         handles_t.append(p1)
+         ax.text(df_1.index[-1], df_1.values[-1][0], round(df_1.values[-1][0],2), fontsize=8,color=mymap[0])#                  
+             
+     
+         plt.title(countr+". Capital adequacy, "+df_1.index[-1].strftime("%B,%Y"))         
+     
+       
+     formatter = matplotlib.dates.DateFormatter('%b-%y')
+     ax.xaxis.set_major_formatter(formatter)
+     plt.show()     
+     #ax.legend(handles=handles_t)  
+     st.pyplot(fig) 
+     
+with cols[1]:
+     ticker1 = "LIQUID_Q"
+     ticker1_sel = key+"_"+ticker1
+     is_t1 = ticker_exists(ticker1_sel) 
+ 
+     fig = plt.figure()
+     ax = fig.add_subplot(1, 1, 1)
+     
+     handles_t = [];
+     if is_t1:
+         #indicator1                  
+         temp = sovdb_read(ticker1_sel, short_date)
+         temp = temp.rename(columns={"Value": ticker1})    
+         macro_data = macro_data.join(temp, how="outer")
+         df_1 = temp            
+         
+         p1, =ax.plot(df_1, color=mymap[0], linewidth=0.8,label='ROE')     
+         handles_t.append(p1)
+         ax.text(df_1.index[-1], df_1.values[-1][0], round(df_1.values[-1][0],2), fontsize=8,color=mymap[0])#                  
+             
+     
+         plt.title(countr+". Liquidity ratio, "+df_1.index[-1].strftime("%B,%Y"))         
+     
+       
+     formatter = matplotlib.dates.DateFormatter('%b-%y')
+     ax.xaxis.set_major_formatter(formatter)
+     plt.show()     
+     #ax.legend(handles=handles_t)  
+     st.pyplot(fig) 
+
+cols=st.columns(2)
+with cols[0]:
+     ticker1 = "NPL_Q_LC"
+     ticker1_sel = key+"_"+ticker1
+     is_t1 = ticker_exists(ticker1_sel) 
+
+     ticker2 = "NLPCRED_Q"
+     ticker2_sel = key+"_"+ticker2
+     is_t2 = ticker_exists(ticker2_sel) 
+
+
+     fig = plt.figure()
+     ax = fig.add_subplot(1, 1, 1)
+     
+     handles_t = [];
+     if is_t1:
+         #indicator1                  
+         temp = sovdb_read(ticker1_sel, short_date)
+         temp = temp.rename(columns={"Value": ticker1})    
+         macro_data = macro_data.join(temp, how="outer")
+         df_1 = temp            
+         
+         #p1, =ax.plot(df_1, color=mymap[0], linewidth=0.8,label='ROE') 
+         p1 =ax.bar(df_1.index, df_1[ticker1],width=d1, color=mymap[1],label='bln LC')
+         handles_t.append(p1)
+         #ax.text(df_1.index[-1], df_1.values[-1][0], round(df_1.values[-1][0],2), fontsize=8,color=mymap[0])#                               
+     
+     if is_t2:
+         #indicator1                  
+         temp = sovdb_read(ticker2_sel, short_date)
+         temp = temp.rename(columns={"Value": ticker2})    
+         macro_data = macro_data.join(temp, how="outer")
+         
+         df_2 = temp            
+         ax2 = ax.twinx()
+         p2, =ax2.plot(df_2, color=mymap[0], linewidth=0.8,label='% gross credit, rhs') 
+         #p1 =ax.bar(df_1.index, df_1[ticker1],width=d1, color=mymap[0],label='bln LC')
+         handles_t.append(p2)
+         ax2.text(df_2.index[-1], df_2.values[-1][0], round(df_2.values[-1][0],2), fontsize=8,color=mymap[0])#                                   
+        
+         plt.title(countr+". Nonperforming loans, "+df_1.index[-1].strftime("%B,%Y"))         
+     
+       
+     formatter = matplotlib.dates.DateFormatter('%b-%y')
+     ax.xaxis.set_major_formatter(formatter)
+     plt.show()     
+     ax.legend(handles=handles_t)  
+     st.pyplot(fig) 
+     
+with cols[1]:
+     ticker1 = "LPNPL_Q"
+     ticker1_sel = key+"_"+ticker1
+     is_t1 = ticker_exists(ticker1_sel) 
+ 
+     fig = plt.figure()
+     ax = fig.add_subplot(1, 1, 1)
+     
+     handles_t = [];
+     if is_t1:
+         #indicator1                  
+         temp = sovdb_read(ticker1_sel, short_date)
+         temp = temp.rename(columns={"Value": ticker1})    
+         macro_data = macro_data.join(temp, how="outer")
+         df_1 = temp            
+         
+         p1, =ax.plot(df_1, color=mymap[0], linewidth=0.8,label='ROE')     
+         handles_t.append(p1)
+         ax.text(df_1.index[-1], df_1.values[-1][0], round(df_1.values[-1][0],2), fontsize=8,color=mymap[0])#                  
+             
+     
+         plt.title(countr+". Loss provisions to NPLs "+df_1.index[-1].strftime("%B,%Y"))         
+     
+       
+     formatter = matplotlib.dates.DateFormatter('%b-%y')
+     ax.xaxis.set_major_formatter(formatter)
+     plt.show()     
+     #ax.legend(handles=handles_t)  
+     st.pyplot(fig) 
+     
+
+cols=st.columns(2)
+with cols[0]:
      ticker1 = "ROE_Q"
      ticker1_sel = key+"_"+ticker1
      is_t1 = ticker_exists(ticker1_sel) 
@@ -1158,6 +1446,32 @@ with cols[0]:
     
          plt.title(countr+". Profitability "+df_1.index[-1].strftime("%B,%Y"))         
      
+       
+     formatter = matplotlib.dates.DateFormatter('%b-%y')
+     ax.xaxis.set_major_formatter(formatter)
+     plt.show()     
+     ax.legend(handles=handles_t)  
+     st.pyplot(fig) 
+
+with cols[1]:     
+
+     fig = plt.figure()
+     ax = fig.add_subplot(1, 1, 1)
+     
+     handles_t = [];
+     if is_m2:
+         #indicator1                  
+         m3_gdp = (m3_q / gdpn_4q) /100;         
+         
+         m3_gdp = m3_q         
+         m3_gdp = m3_gdp.join(gdpn_4q, how="outer")                  
+         m3_gdp['m3_gdp'] = m3_gdp['MBROAD_Q_LC']/m3_gdp['GDPN4Q_Q_LC']*100         
+         
+         p1 =ax.bar(m3_gdp.index, m3_gdp['m3_gdp'],width=d1, color=mymap[1])
+         #st.write(m3_gdp)
+         #ax.text(m3_gdp.index[-1], m3_gdp['m3_gdp'].values[-1][0], round(m3_gdp['m3_gdp'][-1][0],2), fontsize=8,color=mymap[0])#                                   
+         
+         plt.title(countr+". Broad M, %GDP, "+df_1.index[-1].strftime("%B,%Y"))              
        
      formatter = matplotlib.dates.DateFormatter('%b-%y')
      ax.xaxis.set_major_formatter(formatter)
