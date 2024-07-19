@@ -757,7 +757,7 @@ with cols[1]:
          df_2 = temp   
          BS = df_2
          
-         temp = (-1)*sovdb_read(ticker3_sel, short_date)
+         temp = sovdb_read(ticker3_sel, short_date)
          temp = temp.rename(columns={"Value": ticker3})    
          macro_data = macro_data.join(temp, how="outer")
          df_3 = temp   
@@ -770,7 +770,7 @@ with cols[1]:
          SI = df_4         
          
          CA_tbl = BG.join(BS).join(PI).join(SI)
-         
+         #st.write(CA_tbl)
          CA_tbl.plot(kind='bar', stacked=True, ax=ax,color=mymap[:4])         
          #CA.plot(ax=ax, color='r', linewidth=0.8)                           
          ax.set_xticklabels(labels = CA_tbl.index)
@@ -827,7 +827,7 @@ with cols[0]:
          df_2 = temp   
          PORT = df_2
          
-         temp = (-1)*sovdb_read(ticker3_sel, short_date)
+         temp = sovdb_read(ticker3_sel, short_date)
          temp = temp.rename(columns={"Value": ticker3})    
          macro_data = macro_data.join(temp, how="outer")
          df_3 = temp   
@@ -845,7 +845,7 @@ with cols[0]:
          df_5 = temp   
          RES = df_5      
          
-         temp = sovdb_read(ticker6_sel, short_date)
+         temp = (-1)*sovdb_read(ticker6_sel, short_date)
          temp = temp.rename(columns={"Value": ticker6})    
          macro_data = macro_data.join(temp, how="outer")
          df_6 = temp   
