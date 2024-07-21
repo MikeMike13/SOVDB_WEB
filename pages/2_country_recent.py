@@ -866,7 +866,8 @@ with cols[0]:
          plot = FA_tbl.plot(kind="bar", stacked=True, ax=ax,color=mymap[:6])         
          ax.legend(["FDI","Portfolio","Derivatives","Other","Reserves","Exceptional, incl IMF"]);                           
     
-         plt.title(countr+". Financial account, bln USD, "+FA_tbl.index[-1].strftime("%B,%Y"))         
+         plt.suptitle(countr+". Financial account, bln USD, "+FA_tbl.index[-1].strftime("%B,%Y"))         
+         plt.title("<0: inflows of FDI, PI, DER, Other, except., use of res., >0 vise versa")         
          
          ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%b-%y'))        
          
