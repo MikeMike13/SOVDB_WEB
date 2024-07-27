@@ -525,13 +525,12 @@ with cols[0]:
          macro_data = macro_data.join(temp, how="outer")
          df_2 = temp           
          exp_12M = df_2.rolling(12).sum()
-         
-         #p2, = ax.plot(df_2, color=mymap[1],label='Expenditires')
+                  
          p2 =ax.bar(df_2.index+timedelta(days=12), df_2[ticker2],width=d, color=mymap[1],label='expenditures')
          handles_t.append(p2)
          ax.text(df_2.index[-1], df_2.values[-1][0], round(df_2.values[-1][0],2), fontsize=8,color=mymap[1])#           
     
-         plt.title(countr+". Government balance, bln LC, "+df_1.index[-1].strftime("%B,%Y"))         
+         plt.title(countr+". Government rev & exp, bln LC, "+df_1.index[-1].strftime("%B,%Y"))         
      
        
          formatter = matplotlib.dates.DateFormatter('%b-%y')
@@ -539,8 +538,28 @@ with cols[0]:
          plt.show()     
          ax.legend(handles=handles_t)  
          st.pyplot(fig) 
-     
-with cols[1]:         
+
+with cols[1]:     
+    if is_t1:
+         bal_M = df_1.values - df_2.values 
+         #st.write(bal_M)
+         fig = plt.figure()
+         ax = fig.add_subplot(1, 1, 1)     
+         handles_t = [];
+
+         #p1, =ax.plot(df_1.index, bal_12M, color=mymap[0], linewidth=0.8,label='Revenues')  
+         #p1, =ax.plot(df_1.index, bal_M, color=mymap[0],label='revenues')
+         p1 = ax.bar(macro_data.index, macro_data["GOVREV_M_LC"]-macro_data["GOVEXP_M_LC"], width=d, color=mymap[0],label='revenues')
+         formatter = matplotlib.dates.DateFormatter('%b-%y')
+         ax.xaxis.set_major_formatter(formatter)
+         plt.title(countr+". Government balance, bln LC, "+df_1.index[-1].strftime("%B,%Y")) 
+         
+         plt.show()     
+         #ax.legend(handles=handles_t)  
+         st.pyplot(fig) 
+    
+cols=st.columns(2) 
+with cols[0]:         
      
      if is_t1:
          fig = plt.figure()
@@ -557,7 +576,7 @@ with cols[1]:
          handles_t.append(p2)
          ax.text(exp_12M.index[-1], exp_12M.values[-1][0], round(exp_12M.values[-1][0],2), fontsize=8,color=mymap[1])#           
     
-         plt.title(countr+". Government balance, 12M sum, bln LC, "+df_1.index[-1].strftime("%B,%Y"))              
+         plt.title(countr+". Government rev & exp, 12M sum, bln LC, "+df_1.index[-1].strftime("%B,%Y"))              
        
          formatter = matplotlib.dates.DateFormatter('%b-%y')
          ax.xaxis.set_major_formatter(formatter)
@@ -565,6 +584,24 @@ with cols[1]:
          ax.legend(handles=handles_t)  
          st.pyplot(fig) 
         
+with cols[1]:     
+    if is_t1:
+         bal_12M = df_1.rolling(12).sum().values - df_2.rolling(12).sum().values 
+         fig = plt.figure()
+         ax = fig.add_subplot(1, 1, 1)     
+         handles_t = [];
+
+         p1, =ax.plot(df_1.index, bal_12M, color=mymap[0], linewidth=0.8,label='Revenues')  
+         ax.axhline(y=0, color = (0.5, 0.5, 0.5))
+         
+         plt.title(countr+". Government balance, 12M sum, bln LC, "+df_1.index[-1].strftime("%B,%Y"))          
+         formatter = matplotlib.dates.DateFormatter('%b-%y')
+         ax.xaxis.set_major_formatter(formatter)
+         
+         plt.show()     
+         #ax.legend(handles=handles_t)  
+         st.pyplot(fig) 
+         
 cols=st.columns(2)        
 with cols[0]:
      ticker1 = "GOVDEBT_M_LC"
@@ -867,7 +904,7 @@ with cols[0]:
          ax.legend(["FDI","Portfolio","Derivatives","Other","Reserves","Exceptional, incl IMF"]);                           
     
          plt.suptitle(countr+". Financial account, bln USD, "+FA_tbl.index[-1].strftime("%B,%Y"))         
-         plt.title("<0: inflows of FDI, PI, DER, Other, except., use of res., >0 vise versa")         
+         plt.title("<0: inflows of FDI, PI, DER, Other, except., use of res., >0 v.v.")         
          
          ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%b-%y'))        
          
@@ -956,8 +993,27 @@ with cols[0]:
          plt.show()     
          ax.legend(handles=handles_t)  
          st.pyplot(fig) 
-     
-with cols[1]:      
+with cols[1]:     
+    if is_t1:
+         bal_M = df_1.values - df_2.values 
+         #st.write(bal_M)
+         fig = plt.figure()
+         ax = fig.add_subplot(1, 1, 1)     
+         handles_t = [];
+
+         #p1, =ax.plot(df_1.index, bal_12M, color=mymap[0], linewidth=0.8,label='Revenues')  
+         #p1, =ax.plot(df_1.index, bal_M, color=mymap[0],label='revenues')
+         p1 = ax.bar(macro_data.index, macro_data["EXPG_M_USD"]-macro_data["IMPG_M_USD"], width=d, color=mymap[0],label='revenues')
+         formatter = matplotlib.dates.DateFormatter('%b-%y')
+         ax.xaxis.set_major_formatter(formatter)
+         plt.title(countr+". Trade Balance, bln USD, "+df_1.index[-1].strftime("%B,%Y")) 
+         
+         plt.show()     
+         #ax.legend(handles=handles_t)  
+         st.pyplot(fig) 
+         
+cols=st.columns(2)       
+with cols[0]:      
      if is_t1:
          fig = plt.figure()
          ax = fig.add_subplot(1, 1, 1)     
@@ -981,7 +1037,24 @@ with cols[1]:
          plt.show()     
          ax.legend(handles=handles_t)  
          st.pyplot(fig) 
+with cols[1]:     
+    if is_t1:
+         bal_12M = df_1.rolling(12).sum().values - df_2.rolling(12).sum().values 
+         fig = plt.figure()
+         ax = fig.add_subplot(1, 1, 1)     
+         handles_t = [];
 
+         p1, =ax.plot(df_1.index, bal_12M, color=mymap[0], linewidth=0.8,label='Revenues')  
+         ax.axhline(y=0, color = (0.5, 0.5, 0.5))
+         
+         plt.title(countr+". Trade Balance, 12M sum, bln USD, "+df_1.index[-1].strftime("%B,%Y"))          
+         formatter = matplotlib.dates.DateFormatter('%b-%y')
+         ax.xaxis.set_major_formatter(formatter)
+         
+         plt.show()     
+         #ax.legend(handles=handles_t)  
+         st.pyplot(fig) 
+         
 cols=st.columns(2)        
 with cols[0]:
      ticker1 = "RES_M_USD"
@@ -1064,7 +1137,7 @@ with cols[1]:
          handles_t.append(p1)
          ax.text(df_1.index[-1], df_1.values[-1][0], round(df_1.values[-1][0],2), fontsize=8,color=mymap[0])#                  
                       
-         plt.title(countr+".Reserves, gold, tonns, "+df_1.index[-1].strftime("%B,%Y"))         
+         plt.title(countr+". Reserves, gold, tonns, "+df_1.index[-1].strftime("%B,%Y"))         
      
        
          formatter = matplotlib.dates.DateFormatter('%b-%y')
@@ -1194,6 +1267,84 @@ with cols[0]:
          plt.show()     
          ax.legend(handles=handles_t)  
          st.pyplot(fig) 
+
+cols=st.columns(2)        
+with cols[0]:
+     ticker1 = "NIIPASS_Q_USD"
+     ticker1_sel = key+"_"+ticker1
+     is_t1 = ticker_exists(ticker1_sel) 
+ 
+     ticker2 = "NIIPLIAB_Q_USD"
+     ticker2_sel = key+"_"+ticker2
+     is_t2 = ticker_exists(ticker2_sel)    
+     
+     if is_t1:
+         fig = plt.figure()
+         ax = fig.add_subplot(1, 1, 1)     
+         handles_t = [];
+         
+         #indicator1                  
+         temp = sovdb_read(ticker1_sel, short_date)
+         temp = temp.rename(columns={"Value": ticker1})    
+         macro_data = macro_data.join(temp, how="outer")
+         df_1 = temp            
+         
+         p1, =ax.plot(df_1, color=mymap[0], linewidth=0.8,label='Assets')     
+         handles_t.append(p1)
+         ax.text(df_1.index[-1], df_1.values[-1][0], round(df_1.values[-1][0],2), fontsize=8,color=mymap[0])#                  
+             
+     if is_t2:
+         #indicator2                  
+         temp = sovdb_read(ticker2_sel, short_date)
+         temp = temp.rename(columns={"Value": ticker2})             
+         #macro_data = macro_data.join(temp, how="outer")
+         df_2 = temp                    
+         
+         p2, = ax.plot(df_2, color=mymap[1],label='Liabilities')
+         handles_t.append(p2)
+         ax.text(df_2.index[-1], df_2.values[-1][0], round(df_2.values[-1][0],2), fontsize=8,color=mymap[1])#                 
+         
+         plt.title(countr+". NIIP, bln USD, "+df_1.index[-1].strftime("%B,%Y"))         
+     
+       
+         formatter = matplotlib.dates.DateFormatter('%b-%y')
+         ax.xaxis.set_major_formatter(formatter)
+         plt.show()     
+         ax.legend(handles=handles_t)  
+         st.pyplot(fig)
+
+with cols[1]:
+     ticker1 = "NIIPNET_Q_USD"
+     ticker1_sel = key+"_"+ticker1
+     is_t1 = ticker_exists(ticker1_sel) 
+ 
+     
+     if is_t1:
+         fig = plt.figure()
+         ax = fig.add_subplot(1, 1, 1)     
+         handles_t = [];
+         
+         #indicator1                  
+         temp = sovdb_read(ticker1_sel, short_date)
+         temp = temp.rename(columns={"Value": ticker1})    
+         macro_data = macro_data.join(temp, how="outer")
+         df_1 = temp            
+         
+         #p1, =ax.plot(df_1, color=mymap[0], linewidth=0.8,label='Assets')     
+         p1 =ax.bar(df_1.index, df_1[ticker1],width=d1, color=mymap[0])
+         handles_t.append(p1)
+         ax.text(df_1.index[-1], df_1.values[-1][0], round(df_1.values[-1][0],2), fontsize=8,color=mymap[1])#                               
+         
+         plt.title(countr+". NIIP, net, bln USD, "+df_1.index[-1].strftime("%B,%Y"))         
+     
+       
+         formatter = matplotlib.dates.DateFormatter('%b-%y')
+         ax.xaxis.set_major_formatter(formatter)
+         plt.show()     
+         ax.legend(handles=handles_t)  
+         st.pyplot(fig)
+         
+         
          
 st.subheader('Banks')
 cols=st.columns(2)
@@ -1285,7 +1436,7 @@ with cols[1]:
          ax.text(m3_yoy.index[-1], m3_yoy.values[-1][0], round(m3_yoy.values[-1][0],2), fontsize=8,color=mymap[2])#                                   
          
          
-         plt.title(countr+". Credit & Money supply, "+df_1.index[-1].strftime("%B,%Y"))         
+         plt.title(countr+". Credit & Money supply, yoy, "+df_1.index[-1].strftime("%B,%Y"))         
      
        
          formatter = matplotlib.dates.DateFormatter('%b-%y')
