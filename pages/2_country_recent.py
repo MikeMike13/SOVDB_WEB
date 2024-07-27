@@ -1673,11 +1673,23 @@ with cols[0]:
          macro_data = macro_data.join(temp, how="outer")
          df_1 = temp     
          lsusd = df_1
+         end_v = df_1.values[-1][0]
+         start_v = df_1.values[0][0]
+         period_ret = (end_v/start_v-1)*100
+         
+         end_d = df_1.index[-1]
+         start_d = df_1.index[0]
+         years = (end_d-start_d).days/365
+         
+         annula_ret = ((1+period_ret/100)**(365.25/(end_d - start_d).days)-1)*100
+         
          
          p1, =ax.plot(df_1, color=mymap[0], linewidth=0.8)     
          handles_t.append(p1)
          ax.text(df_1.index[-1], df_1.values[-1][0], round(df_1.values[-1][0],2), fontsize=8,color=mymap[0])#         
          plt.suptitle(countr+". LCUSD, eop, "+df_1.index[-1].strftime("%B,%Y"))                  
+         plt.title("Annual change: "+str(round(annula_ret,1))+ "%, period change "+str(round(period_ret,1))+"%, years: "+str(round(years,1)))                  
+         
              
          formatter = matplotlib.dates.DateFormatter('%b-%y')
          ax.xaxis.set_major_formatter(formatter)
