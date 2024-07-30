@@ -1081,8 +1081,9 @@ with cols[0]:
          df_1 = temp            
          
          p1, =ax.plot(df_1, color=mymap[0], linewidth=0.8,label='Total')     
-         handles_t.append(p1)
-         ax.text(df_1.index[-1], df_1.values[-1][0], round(df_1.values[-1][0],2), fontsize=8,color=mymap[0])#                  
+         handles_t.append(p1)         
+         if not df_1.empty:
+             ax.text(df_1.index[-1], df_1.values[-1][0], round(df_1.values[-1][0],2), fontsize=8,color=mymap[0])#                  
              
      if is_t2:
          #indicator2                  
@@ -1093,7 +1094,8 @@ with cols[0]:
          
          p2, = ax.plot(df_2, color=mymap[1],label='FX')
          handles_t.append(p2)
-         ax.text(df_2.index[-1], df_2.values[-1][0], round(df_2.values[-1][0],2), fontsize=8,color=mymap[1])#           
+         if not df_2.empty:
+             ax.text(df_2.index[-1], df_2.values[-1][0], round(df_2.values[-1][0],2), fontsize=8,color=mymap[1])#           
     
      if is_t3:
          #indicator3                  
@@ -1105,9 +1107,11 @@ with cols[0]:
          
          p3, = ax.plot(df_3, color=mymap[2],label='Gold')
          handles_t.append(p3)
-         ax.text(df_3.index[-1], df_3.values[-1][0], round(df_3.values[-1][0],2), fontsize=8,color=mymap[2])#      
+         if not df_3.empty:
+             ax.text(df_3.index[-1], df_3.values[-1][0], round(df_3.values[-1][0],2), fontsize=8,color=mymap[2])#      
          
-         plt.title(countr+". Reserves, bln USD, "+df_1.index[-1].strftime("%B,%Y"))         
+         if not df_1.empty:
+             plt.title(countr+". Reserves, bln USD, "+df_1.index[-1].strftime("%B,%Y"))         
      
        
          formatter = matplotlib.dates.DateFormatter('%b-%y')
@@ -1135,9 +1139,10 @@ with cols[1]:
          
          p1, =ax.plot(df_1, color=mymap[0], linewidth=0.8,label='Total')     
          handles_t.append(p1)
-         ax.text(df_1.index[-1], df_1.values[-1][0], round(df_1.values[-1][0],2), fontsize=8,color=mymap[0])#                  
+         if not df_1.empty:
+             ax.text(df_1.index[-1], df_1.values[-1][0], round(df_1.values[-1][0],2), fontsize=8,color=mymap[0])#                  
                       
-         plt.title(countr+". Reserves, gold, tonns, "+df_1.index[-1].strftime("%B,%Y"))         
+             plt.title(countr+". Reserves, gold, tonns, "+df_1.index[-1].strftime("%B,%Y"))         
      
        
          formatter = matplotlib.dates.DateFormatter('%b-%y')
@@ -1364,19 +1369,19 @@ with cols[0]:
          macro_data = macro_data.join(temp, how="outer")
          df_1 = temp            
          
-         df_2 = df_1.pct_change(periods=12) * 100  
-         credit_yoy = df_2
+         if not df_1.empty:
+             df_2 = df_1.pct_change(periods=12) * 100  
+             credit_yoy = df_2         
          
+            #p1, =ax.plot(df_1, color=mymap[0], linewidth=0.8,label='ROE') 
+             p1 =ax.bar(df_1.index, df_1[ticker1],width=d, color=mymap[1],label='bln LC')
+             handles_t.append(p1)
+             ax2 = ax.twinx()
+             p2, =ax2.plot(df_2, color=mymap[0], linewidth=0.8,label='yoy, rhs') 
+             handles_t.append(p2)
+             ax2.text(df_2.index[-1], df_2.values[-1][0], round(df_2.values[-1][0],2), fontsize=8,color=mymap[0])#                                   
          
-         #p1, =ax.plot(df_1, color=mymap[0], linewidth=0.8,label='ROE') 
-         p1 =ax.bar(df_1.index, df_1[ticker1],width=d, color=mymap[1],label='bln LC')
-         handles_t.append(p1)
-         ax2 = ax.twinx()
-         p2, =ax2.plot(df_2, color=mymap[0], linewidth=0.8,label='yoy, rhs') 
-         handles_t.append(p2)
-         ax2.text(df_2.index[-1], df_2.values[-1][0], round(df_2.values[-1][0],2), fontsize=8,color=mymap[0])#                                   
-         
-         plt.title(countr+". Credit to private sector, "+df_1.index[-1].strftime("%B,%Y"))         
+             plt.title(countr+". Credit to private sector, "+df_1.index[-1].strftime("%B,%Y"))         
      
        
          formatter = matplotlib.dates.DateFormatter('%b-%y')
@@ -1696,8 +1701,48 @@ with cols[0]:
          plt.show()     
          #ax.legend(handles=handles_t)  
          st.pyplot(fig) 
-     
 with cols[1]:
+     ticker1 = "STOCK_M_EOP"
+     ticker1_sel = key+"_"+ticker1
+     is_t1 = ticker_exists(ticker1_sel)  
+     
+     if is_t1:
+         fig = plt.figure()
+         ax = fig.add_subplot(1, 1, 1)
+     #indicator1
+         temp = sovdb_read(ticker1_sel, short_date)
+         temp = temp.rename(columns={"Value": ticker1})    
+         macro_data = macro_data.join(temp, how="outer")
+         df_1 = temp     
+         
+         lsusd = df_1
+         end_v = df_1.values[-1][0]
+         start_v = df_1.values[0][0]
+         period_ret = (end_v/start_v-1)*100
+         
+         end_d = df_1.index[-1]
+         start_d = df_1.index[0]
+         years = (end_d-start_d).days/365
+         
+         annula_ret = ((1+period_ret/100)**(365.25/(end_d - start_d).days)-1)*100
+         
+         
+         p1, =ax.plot(df_1, color=mymap[0], linewidth=0.8)     
+         handles_t.append(p1)
+         ax.text(df_1.index[-1], df_1.values[-1][0], round(df_1.values[-1][0],2), fontsize=8,color=mymap[0])#         
+         plt.suptitle(countr+". Stock market, eop, "+df_1.index[-1].strftime("%B,%Y"))                  
+         plt.title("Annual change: "+str(round(annula_ret,1))+ "%, period change "+str(round(period_ret,1))+"%, years: "+str(round(years,1)))                  
+         
+             
+         formatter = matplotlib.dates.DateFormatter('%b-%y')
+         ax.xaxis.set_major_formatter(formatter)
+         plt.show()     
+         #ax.legend(handles=handles_t)  
+         st.pyplot(fig) 
+         
+         
+cols=st.columns(2) 
+with cols[0]:
      ticker1 = "NEER_M"
      ticker1_sel = key+"_"+ticker1
      is_t1 = ticker_exists(ticker1_sel) 
@@ -1741,9 +1786,8 @@ with cols[1]:
          plt.show()     
          ax.legend(handles=handles_t)  
          st.pyplot(fig) 
-     
-cols=st.columns(2)            
-with cols[0]:
+    
+with cols[1]:
      if is_t1:
          neer_norm = 100*(neer / neer.iloc[0, :])
          reer_norm = 100*(reer / reer.iloc[0, :])
